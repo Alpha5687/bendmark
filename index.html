@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BendMark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14181B; --surface:#1D2226; --surface-2:#262C31; --line:#363D43;
+  --amber:#F2A93B; --red:#E2574C; --blue:#4E9BE8;
+  --text:#ECEAE3; --text-dim:#9CA3A8; --text-faint:#656C71; --radius:3px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+body.ar{font-family:'Noto Sans Arabic','Inter',sans-serif;}
+h1,h2{font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:0.02em;}
+body.ar h1, body.ar h2{font-family:'Noto Sans Arabic',sans-serif;letter-spacing:0;}
+.wrap{max-width:520px;margin:0 auto;padding:0 0 90px;}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+header .brand{display:flex;align-items:baseline;gap:9px;}
+header h1{font-size:24px;margin:0;color:var(--text);}
+header .brand-mark{width:10px;height:10px;background:var(--amber);transform:rotate(45deg);flex:none;}
+select.langsel{background:var(--surface);border:1px solid var(--line);color:var(--text);padding:9px 28px 9px 12px;border-radius:var(--radius);font-size:13px;font-family:'IBM Plex Mono',monospace;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239CA3A8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+body.ar select.langsel{background-position:left 10px center;padding:9px 12px 9px 28px;}
+section{padding:20px;border-bottom:1px solid var(--line);}
+section h2{font-size:15px;color:var(--text-dim);margin:0 0 14px;font-weight:600;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:7px;}
+.numin{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);padding:13px 12px;border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:16px;}
+.numin:focus{outline:none;border-color:var(--amber);}
+select.numin{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239CA3A8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+body.ar select.numin{background-position:left 14px center;}
+.hint{font-size:12px;color:var(--text-faint);margin-top:6px;line-height:1.4;}
+.calc-btn{width:100%;background:var(--amber);color:#1A1300;border:none;padding:16px;border-radius:var(--radius);font-size:17px;font-weight:600;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.03em;cursor:pointer;}
+body.ar .calc-btn{font-family:'Noto Sans Arabic',sans-serif;font-size:15px;}
+.calc-btn:active{transform:translateY(1px);}
+.results{display:none;}
+.results.show{display:block;}
+.mark-list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.mark-row{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-bottom:1px solid var(--line);gap:10px;}
+.mark-row:last-child{border-bottom:none;}
+.mark-row .m-label{font-size:13px;color:var(--text-dim);}
+.mark-row .m-val{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:var(--amber);white-space:nowrap;}
+.steps{margin:0 0 4px;padding:0;list-style:none;counter-reset:step;}
+.steps li{counter-increment:step;padding:10px 0 10px 34px;position:relative;font-size:14px;line-height:1.5;color:var(--text);border-bottom:1px solid var(--line);}
+body.ar .steps li{padding:10px 34px 10px 0;}
+.steps li:last-child{border-bottom:none;}
+.steps li::before{content:counter(step);position:absolute;left:0;top:9px;width:22px;height:22px;background:var(--surface-2);border:1px solid var(--line);border-radius:50%;font-family:'IBM Plex Mono',monospace;font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
+body.ar .steps li::before{left:auto;right:0;}
+.diagram-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin-bottom:4px;}
+.legend{display:flex;gap:16px;font-size:11px;color:var(--text-faint);padding:8px 4px 0;flex-wrap:wrap;}
+.legend span{display:flex;align-items:center;gap:5px;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;}
+.upsell{margin:18px 20px 0;background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);padding:14px;font-size:12px;color:var(--text-faint);text-align:center;}
+.upsell b{color:var(--text-dim);}
+.ad-slot{margin:14px 20px 20px;min-height:60px;overflow:hidden;text-align:center;}
+.err{color:var(--red);font-size:12px;margin-top:6px;display:none;}
+.err.show{display:block;}
+.creator-link{display:block;text-align:center;padding:22px 0 8px;font-size:11px;color:var(--text-faint);text-decoration:none;font-family:'IBM Plex Mono',monospace;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;max-width:340px;width:100%;}
+.modal-box h3{font-size:17px;margin:0 0 14px;}
+.modal-actions{display:flex;gap:8px;margin-top:14px;}
+.modal-actions button{flex:1;padding:12px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface-2);color:var(--text);font-size:14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;}
+.modal-actions button.primary{background:var(--amber);color:#1A1300;border-color:var(--amber);font-weight:600;}
+.admin-overlay{position:fixed;inset:0;background:var(--bg);display:none;overflow-y:auto;z-index:40;}
+.admin-overlay.show{display:block;}
+.admin-wrap{max-width:520px;margin:0 auto;padding:0 0 60px;}
+.admin-header{padding:20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+.admin-header h1{font-size:22px;margin:0;color:var(--amber);}
+.exit-btn{background:none;border:1px solid var(--line);color:var(--text-dim);padding:8px 14px;border-radius:var(--radius);font-size:13px;cursor:pointer;}
+.admin-note{font-size:12px;color:var(--text-faint);background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);padding:12px 14px;margin:0 20px 20px;line-height:1.5;}
+.save-btn{background:var(--amber);color:#1A1300;border:none;padding:11px 16px;border-radius:var(--radius);font-weight:600;font-size:14px;cursor:pointer;}
+.saved-msg{font-size:12px;color:var(--text-dim);margin-top:8px;display:none;}
+.saved-msg.show{display:block;}
+.empty-state{font-size:13px;color:var(--text-faint);text-align:center;padding:30px 10px;}
+.auth-wrap{max-width:400px;margin:60px auto;padding:0 20px;}
+.auth-box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:26px 22px;}
+.auth-box h2{font-size:20px;margin:0 0 18px;text-align:center;}
+.auth-switch{text-align:center;font-size:13px;color:var(--text-faint);margin-top:16px;}
+.auth-switch a{color:var(--amber);text-decoration:none;cursor:pointer;}
+.auth-forgot{text-align:right;font-size:12px;margin:-8px 0 16px;}
+.auth-forgot a{color:var(--text-faint);text-decoration:none;cursor:pointer;}
+.account-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line);font-size:12px;color:var(--text-faint);gap:10px;}
+.account-bar .acc-actions{display:flex;gap:12px;flex:none;}
+.account-bar a{color:var(--text-dim);text-decoration:none;cursor:pointer;white-space:nowrap;}
+.account-bar .acc-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.blocked-wrap{max-width:400px;margin:80px auto;padding:0 20px;text-align:center;}
+.blocked-wrap h2{font-size:20px;color:var(--red);margin:0 0 10px;}
+.blocked-wrap p{font-size:14px;color:var(--text-dim);line-height:1.6;}
+.user-row{padding:12px 14px;border-bottom:1px solid var(--line);}
+.user-row:last-child{border-bottom:none;}
+.user-row .u-email{font-size:13px;color:var(--text);margin-bottom:4px;word-break:break-all;}
+.user-row .u-meta{font-size:11px;color:var(--text-faint);margin-bottom:8px;}
+.user-row .u-actions{display:flex;gap:8px;}
+.user-row .u-actions button{flex:1;padding:8px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface-2);color:var(--text);font-size:12px;cursor:pointer;}
+.user-row .u-actions button.danger{color:var(--red);border-color:var(--red);}
+.success-msg{font-size:13px;color:#5DCAA5;margin-top:10px;display:none;}
+.success-msg.show{display:block;}
+.trial-notice{background:rgba(242,169,59,0.12);border:1px solid var(--amber);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.45;color:var(--text);}
+.trial-notice b{display:block;color:var(--amber);font-family:'Barlow Condensed',sans-serif;font-size:18px;margin-bottom:4px;}
+.trial-bar{padding:10px 20px;font-size:13px;font-weight:600;text-align:center;background:rgba(242,169,59,0.12);color:var(--amber);border-bottom:1px solid var(--line);}
+.trial-bar.paid{background:rgba(93,202,165,0.12);color:#5DCAA5;}
+.voice-btn{width:100%;background:var(--surface-2);color:var(--text);border:1px solid var(--amber);padding:14px;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;}
+.voice-btn.listening{background:var(--red);border-color:var(--red);color:#fff;}
+.voice-status{font-size:13px;color:var(--text);margin-top:10px;line-height:1.4;min-height:1px;}
+.voice-replay{margin-top:10px;width:100%;background:transparent;color:var(--amber);border:1px dashed var(--amber);padding:10px;border-radius:var(--radius);font-size:13px;cursor:pointer;}
+.pay-btn{display:block;width:100%;margin-top:12px;background:var(--amber);color:#1A1300;border:none;padding:14px;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;}
+.pay-btn:disabled{opacity:0.6;}
+.ad-label{font-size:10px;color:var(--text-faint);text-align:center;margin-bottom:6px;font-family:'IBM Plex Mono',monospace;}
+.trial-bar.low{background:rgba(226,87,76,0.12);color:var(--red);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-mark"></span>
+    <h1>BendMark</h1>
+  </div>
+  <select class="langsel" id="langSelect">
+    <option value="fr">Français</option>
+    <option value="en">English</option>
+    <option value="es">Español</option>
+    <option value="ar">العربية</option>
+    <option value="ht">Kreyòl</option>
+  </select>
+</header>
+
+<div class="auth-wrap" id="authScreen">
+  <div class="trial-notice" id="authNotice"></div>
+  <div class="auth-box" id="authBox"></div>
+</div>
+
+<div class="blocked-wrap" id="blockedScreen" style="display:none;"></div>
+
+<div class="wrap" id="appScreen" style="display:none;">
+  <div class="account-bar" id="accountBar">
+    <span class="acc-email" id="accEmail"></span>
+    <span class="acc-actions">
+      <a id="accChangePwdLink"></a>
+      <a id="accLogoutLink"></a>
+    </span>
+  </div>
+  <div class="trial-bar" id="trialBar"></div>
+
+  <section id="voiceBox">
+    <h2 id="t_voiceTitle"></h2>
+    <button class="voice-btn" id="voiceBtn"></button>
+    <div class="hint" id="voiceHint"></div>
+    <div class="voice-status" id="voiceStatus"></div>
+    <button class="voice-replay" id="voiceReplayBtn" style="display:none"></button>
+  </section>
+
+  <section>
+    <h2 id="t_bendTypeTitle"></h2>
+    <div class="field">
+      <select class="numin" id="bendSelect"></select>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="t_pipeBenderTitle"></h2>
+    <div class="field">
+      <label id="t_unitLabel"></label>
+      <select class="numin" id="unitSelect"></select>
+    </div>
+    <div class="field">
+      <label id="t_pipeSizeLabel"></label>
+      <select class="numin" id="sizeSelect"></select>
+    </div>
+    <div class="field">
+      <label id="t_benderLabel"></label>
+      <select class="numin" id="vendorSelect"></select>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="t_detailsTitle"></h2>
+    <div id="inputArea"></div>
+    <div class="err" id="errBox"></div>
+    <button class="calc-btn" id="calcBtn"></button>
+  </section>
+
+  <section class="results" id="resultsSection">
+    <h2 id="t_resultTitle"></h2>
+    <div class="diagram-box" id="diagramBox"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#E2574C"></i><span id="t_legendMark"></span></span>
+      <span><i class="dot" style="background:#4E9BE8"></i><span id="t_legendBend"></span></span>
+    </div>
+    <div style="height:16px"></div>
+    <div class="mark-list" id="markList"></div>
+    <ol class="steps" id="stepsList"></ol>
+  </section>
+
+  <div class="upsell">
+    <b id="t_upsellTitle"></b><br>
+    <span id="t_upsellDesc"></span>
+    <button class="pay-btn" id="upsellBtn"></button>
+  </div>
+  <div class="ad-slot">
+    <div class="ad-label" id="t_adSlot"></div>
+    <div id="container-05a0c85f7f4edebcd0ebf4a2573318e8"></div>
+  </div>
+  <a href="#" class="creator-link" id="creatorLink">•</a>
+</div>
+
+<div class="modal-overlay" id="codeModal">
+  <div class="modal-box">
+    <h3 id="t_codeModalTitle"></h3>
+    <input class="numin" type="password" id="codeInput" autocomplete="off">
+    <div class="err show" id="codeErr" style="display:none;"></div>
+    <div class="modal-actions">
+      <button id="codeCancelBtn"></button>
+      <button class="primary" id="codeSubmitBtn"></button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <h1 id="t_adminTitle"></h1>
+      <button class="exit-btn" id="adminExitBtn"></button>
+    </div>
+    <div class="admin-note" id="t_adminNote"></div>
+    <section>
+      <h2 id="t_adminPriceTitle"></h2>
+      <div class="field">
+        <label id="t_adminPriceLabel"></label>
+        <input class="numin" type="number" id="adminPriceInput" step="0.5">
+      </div>
+      <button class="save-btn" id="adminSavePriceBtn"></button>
+      <div class="saved-msg" id="adminPriceSaved"></div>
+    </section>
+    <section>
+      <h2 id="t_adminUsersTitle"></h2>
+      <div class="mark-list" id="adminUsersList"><div class="empty-state" id="t_adminUsersEmpty"></div></div>
+    </section>
+  </div>
+</div>
+
+<script>
+var CONSTANTS_OFFSET = [
+  {angle:10, k:6, sh:1/16},
+  {angle:22.5, k:2.6, sh:3/16},
+  {angle:30, k:2, sh:1/4},
+  {angle:45, k:1.4, sh:3/8},
+  {angle:60, k:1.2, sh:1/2}
+];
+function angleData(a){ return CONSTANTS_OFFSET.filter(function(c){ return c.angle === a; })[0] || CONSTANTS_OFFSET[2]; }
+var TAKEUP = [
+  {size:"1/2\"", v:5},
+  {size:"3/4\"", v:6},
+  {size:"1\"", v:8},
+  {size:"1 1/4\"", v:11}
+];
+var UNIT_FACTOR = { "in":1, "ft":1/12, "mm":25.4, "cm":2.54, "m":0.0254 };
+var UNIT_SYMBOL = { "in":"\"", "ft":"ft", "mm":"mm", "cm":"cm", "m":"m" };
+var UNIT_ORDER = ["in","ft","mm","cm","m"];
+var BEND_ORDER = ["offset","bend90","b2b","kick","three","four"];
+var VENDOR_ORDER = ["manual","hydraulic","oneshot","electric"];
+
+var DICT = {
+fr:{
+  bendTypeTitle:"1. Type de pli",
+  pipeBenderTitle:"2. Tuyau et cintreuse",
+  detailsTitle:"3. Détails du pli",
+  resultTitle:"Résultat",
+  unitLabel:"Système d'unité",
+  units:{"in":"Pouces", "ft":"Pieds", "mm":"Millimètres", "cm":"Centimètres", "m":"Mètres"},
+  pipeSizeLabel:"Diamètre du tuyau",
+  benderLabel:"Cintreuse",
+  voiceMinus:"moins", voiceEquals:"égale", adminUnlimited:"Accès créateur — illimité",
+  voiceTitle:"Commande vocale",
+  voiceBtn:"🎤 Parler",
+  voiceStop:"⏹ Arrêter",
+  voiceListening:"J'écoute… dis ton calcul.",
+  voiceHint:"« offset de 2 pouces à 30 degrés à 1 pied du bout », Exemples : « offset de 4 pouces à 30 degrés », « 90 de 20 pouces », « back to back 10 et 30 », « kick de 2 pouces à 22 degrés », « three point hauteur 3 », « four point largeur 6 hauteur 3 ».",
+  voiceHeard:"Compris :",
+  voiceNotUnderstood:"Je n'ai pas compris le type de pli ou les mesures. Réessaie avec un des exemples.",
+  voiceUnsupported:"La commande vocale n'est pas disponible sur ce navigateur. Utilise Chrome (Android) ou Safari (iPhone).",
+  voiceMicDenied:"Accès au micro refusé. Autorise le micro dans les réglages du navigateur.",
+  voiceReplay:"🔊 Réécouter les explications",
+  voiceIntro:"Voici ton calcul.",
+  voiceStepsIntro:"Étapes à suivre.",
+  voiceInch:"pouces", voiceDeg:"degrés",
+  subscribeBtn:"S'abonner — 3 $/mois",
+  manageSub:"Gérer mon abonnement",
+  paymentError:"Le paiement n'a pas pu démarrer. Réessaie dans un instant.",
+  paymentPending:"Paiement reçu ! Activation de ton abonnement en cours…",
+  adLabel:"Publicité",
+  g:{"offStart": "Distance du bout du tuyau à la 1re marque (optionnel)", "threeStart": "Distance du bout du tuyau au centre de l'obstacle (optionnel)", "fourStart": "Distance du bout du tuyau au bord de l'obstacle (optionnel)", "offNote": "Le diamètre du tuyau ne change pas le calcul d'un offset : seuls la hauteur et l'angle comptent.", "mult": "Multiplicateur", "calc": "Calcul", "shrink": "Retrait (le tuyau raccourcit de)", "between": "Entre les 2 marques", "markN": "Marque {n} (depuis le bout)", "markRel": "Marque {n} (depuis la marque 1)", "center": "Marque du centre (depuis le bout)", "side": "Du centre à chaque marque", "fourShort": "Pas assez de tuyau avant l'obstacle : augmente la distance depuis le bout.", "feetWord": "pieds", "off1": "Calcul : hauteur {depth} × multiplicateur {k} (pour {angle}°) = {dist}. C'est la distance entre les 2 marques.", "off2a": "Mesure {start} depuis le bout du tuyau et fais la marque 1 tout autour du tuyau.", "off2b": "Fais la marque 1 à l'endroit où l'offset doit commencer.", "off3": "Depuis la marque 1, mesure {dist} vers le reste du tuyau et fais la marque 2{at}.", "off4": "Place la cintreuse sur le tuyau, flèche exactement sur la marque 1, crochet tourné vers le bout du tuyau.", "off5": "Pied bien appuyé, plie jusqu'à {angle}° (repère {angle}° de la cintreuse). Pas plus.", "off6": "Retire la cintreuse et fais tourner le tuyau d'un demi-tour (180°) sur lui-même.", "off7": "Place la flèche sur la marque 2. Vérifie que le tuyau est bien droit dans la cintreuse : le premier pli doit être exactement à l'opposé, dans le même plan (vise le long du tuyau), sinon l'offset sera tordu.", "off8": "Plie dans l'autre sens jusqu'à {angle}°. Les deux parties droites du tuyau redeviennent parallèles.", "off9": "Vérifie : posé à plat, l'écart entre les deux parties droites doit faire {depth}. Le tuyau a raccourci de {shrink} : si ta mesure finale part de l'autre bout, ajoute {shrink}.", "kick1": "Calcul : hauteur {depth} × multiplicateur {k} (pour {angle}°) = {dist}.", "kick2": "Mesure {dist} depuis le bout du tuyau qui doit se soulever et fais une marque nette tout autour.", "kick3": "Place la cintreuse, flèche exactement sur la marque, crochet tourné vers ce bout.", "kick4": "Pied bien appuyé, plie jusqu'à {angle}°, pas plus.", "kick5": "Vérifie : posé à plat, le bout du tuyau doit être soulevé de {depth}. Un seul pli : pas de deuxième marque.", "three1": "Calcul : hauteur {h} × 2.5 = {dist} (du centre à chaque marque). Retrait : {h} × 3/16 = {shrink}.", "three2a": "Mesure {center} depuis le bout du tuyau et fais la marque du centre ({start} jusqu'au centre de l'obstacle + {shrink} de retrait).", "three2b": "Fais la marque du centre là où le tuyau doit passer au-dessus du centre de l'obstacle. Si tu mesures depuis le bout, ajoute {shrink} de retrait.", "three3": "Mesure {dist} de chaque côté de la marque du centre et fais les marques 1 et 3.", "three4": "Aligne la marque du centre sur le repère de selle (encoche ou goutte) de la cintreuse — à défaut, sur la flèche — et plie à 45°.", "three5": "Fais tourner le tuyau d'un demi-tour (180°), place la marque 1 sur la flèche, tuyau bien droit dans le même plan, et plie à 22.5°.", "three6": "Retourne le tuyau bout pour bout, place la marque 3 sur la flèche (toujours dans le même plan) et plie à 22.5°.", "three7": "Vérifie : le dessus de la bosse doit être à {h} de hauteur et les deux bouts du tuyau alignés.", "four1": "Calcul : hauteur {h} × 2 (30°) = {d} entre les marques de chaque offset. Largeur de l'obstacle {w} = espace entre les marques 2 et 3. Retrait total : {shrink}.", "four2a": "Mesure depuis le bout du tuyau : marque 1 à {m1}, marque 2 à {m2} ({start} jusqu'à l'obstacle + {s1} de retrait), marque 3 à {m3}, marque 4 à {m4}.", "four2b": "Fais la marque 1, puis depuis la marque 1 : marque 2 à {d}, marque 3 à {m3r}, marque 4 à {m4r}.", "four3": "Flèche sur la marque 1, crochet vers le bout du tuyau : plie à 30°.", "four4": "Fais tourner le tuyau d'un demi-tour (180°), flèche sur la marque 2, tuyau bien droit dans le même plan : plie à 30°. Le premier offset est fait.", "four5": "Garde la même orientation, flèche sur la marque 3 : plie à 30°.", "four6": "Fais tourner le tuyau d'un demi-tour, flèche sur la marque 4 : plie à 30°. Le tuyau redescend et repart droit.", "four7": "Vérifie : le plateau entre les marques 2 et 3 doit passer {h} au-dessus, sur {w} de long, et les deux bouts doivent être alignés."},
+  calcBtn:"Calculer",
+  legendMark:"marque sur le tuyau",
+  legendBend:"point de pli",
+  upsellTitle:"BendMark Pro — 3 $/mois",
+  upsellDesc:"Accès illimité à tous les calculs et à la commande vocale. Paiement sécurisé, annulable à tout moment.",
+  adSlot:"emplacement publicitaire",
+  comingSoon:" (bientôt)",
+  bendNames:{b2b:"Back to Back — deux 90° dos à dos (U)",offset:"Offset — contourner un obstacle (2 plis)",bend90:"90° Bend — pli à angle droit",kick:"Kick — petit ajustement (1 pli)",three:"Three Point — bosse à 3 plis",four:"Four Point — bosse à 4 plis"},
+  vendorNames:{manual:"Cintreuse manuelle",hydraulic:"Cintreuse hydraulique",oneshot:"One-shot",electric:"Cintreuse électrique"},
+  fields:{
+    b2bStub:"Hauteur du premier 90° (stub)", b2bDist:"Distance dos à dos (extérieur à extérieur)",
+    offsetDepth:"Profondeur de l'obstacle",
+    offsetAngle:"Angle du pli",
+    bend90Length:"Longueur finale désirée après le pli",
+    bend90Hint:"Exemple : tuyau 1\" (take-up 8\"). Pour un 90 de 28\", l'appli calcule 28 − 8 = 20\" : tu marques 20\" depuis le bout et tu places cette marque sur la flèche de la cintreuse.",
+    kickDepth:"Hauteur du décalage",
+    kickAngle:"Angle du pli",
+    threeHeight:"Hauteur de l'objet à enjamber",
+    fourWidth:"Largeur de l'objet",
+    fourHeight:"Hauteur de l'objet"
+  },
+  phPrefix:"ex :",
+  errors:{
+    b2bDims:"Entre la hauteur du stub et la distance dos à dos.", b2bTooSmall:"La hauteur du stub doit être plus grande que le take-up ({tu}).",
+    offsetDepth:"Entre la profondeur de l'obstacle.",
+    bend90Length:"Entre la longueur finale désirée.",
+    bend90TooSmall:"La longueur désirée doit être plus grande que le take-up ({tu}{U}).",
+    kickDepth:"Entre la hauteur du décalage.",
+    threeHeight:"Entre la hauteur de l'objet.",
+    fourDims:"Entre la largeur et la hauteur de l'objet."
+  },
+  marks:{
+    b2bStub:"Hauteur du stub", b2bTakeup:"Take-up", b2bMark1:"Marque 1 (depuis le bout du tuyau)", b2bDist:"Marque 2 (depuis le dos du 1er 90°)",
+    offsetDepth:"Profondeur du déport", offsetAngle:"Angle des 2 plis", pipeSize:"Diamètre du tuyau", offsetDist:"Distance entre les 2 marques",
+    bend90Size:"Diamètre", bend90Takeup:"Take-up", bend90Length:"Longueur finale désirée", bend90Calc:"Calcul", bend90Mark:"Marque à faire (depuis le bout)",
+    kickDepth:"Hauteur du décalage", kickAngle:"Angle", kickDist:"Distance depuis le bout du tuyau",
+    threeHeight:"Hauteur de l'objet", threeConst:"Constante (fixe)", threeDist:"Distance du centre à chaque marque",
+    fourWidth:"Largeur de l'objet", fourHeight:"Hauteur de l'objet", fourGap:"Écart marques 1 et 2 (bas)", fourOffset:"Décalage vers marques 3 et 4"
+  },
+  steps:{
+    b2b1:"Mesure {mark1} depuis le bout du tuyau et fais la marque 1 (stub de {stub} moins le take-up de {tu}).", b2b2:"Place la marque 1 sur la flèche de la cintreuse et plie à 90° : c'est le premier stub.", b2b3:"Mesure {dist} depuis le dos (l'extérieur) du premier 90°, le long du tuyau, et fais la marque 2.", b2b4:"Retourne la cintreuse sur le tuyau, aligne la marque 2 avec l'étoile (repère dos de pli) et plie à 90° : les deux stubs doivent pointer du même côté.", b2b5:"Vérifie : la distance extérieure entre les deux stubs doit faire {dist}.",
+    offset1:"Place la première marque (flèche) là où le déport doit commencer.",
+    offset2:"Mesure {dist}{U} à partir de cette marque, dans le sens où le tuyau continue, et fais une deuxième marque.",
+    offset3:"Plie à {angle}° sur la première marque, dans la direction opposée à l'obstacle.",
+    offset4:"Plie à {angle}° sur la deuxième marque, dans la direction opposée au premier pli, pour ramener le tuyau parallèle à sa ligne d'origine.",
+    bend90_1:"Calcul : longueur voulue {length} − take-up {tu} (tuyau {size}) = {mark}. Le take-up, c'est la longueur que le pli « mange » : c'est pour ça qu'on le soustrait.",
+    bend90_2:"Mesure {mark} depuis le bout du tuyau et fais une marque nette tout autour du tuyau.",
+    bend90_3:"Pose le tuyau au sol et glisse la cintreuse dessus, le crochet tourné vers le bout que tu as mesuré.",
+    bend90_4:"Aligne la marque exactement sur la flèche de la cintreuse — c'est là que le 90° se forme.",
+    bend90_5:"Pied bien appuyé sur la marche de la cintreuse, tire le manche d'un mouvement régulier, sans à-coups.",
+    bend90_6:"Arrête quand le tuyau est à 90° : vérifie avec le niveau à bulle ou le repère 90° de la cintreuse. Ne dépasse pas.",
+    bend90_7:"Vérifie : du sol jusqu'au bout du tuyau (dos du pli), tu dois mesurer {length}. Le take-up de {tu} vaut pour une cintreuse manuelle EMT ; si ta cintreuse indique un autre chiffre, utilise celui-là.",
+    kick1:"Mesure {dist}{U} depuis le bout du tuyau et fais une seule marque.",
+    kick2:"Plie à {angle}° sur cette marque, dans la direction du décalage voulu.",
+    kick3:"Un seul pli — pas de deuxième marque nécessaire pour un kick.",
+    three1:"Marque le centre du tuyau — ce sera le sommet, plié à 45°.",
+    three2:"Mesure {dist}{U} de chaque côté du centre et fais deux marques.",
+    three3:"Plie le centre à 45°.",
+    three4:"Plie chaque marque latérale à 22.5°, dans la direction opposée au centre.",
+    four1:"Marque le tuyau aux points 1 et 2, espacés de {width}{U} (la largeur exacte de l'objet).",
+    four2:"À partir de chaque marque, mesure {offset}{U} vers l'extérieur et fais les marques 3 et 4.",
+    four3:"Plie les 4 marques à 30° chacune, dans la direction du plateau (vers le haut).",
+    four4:"Le segment entre les marques 1 et 2 restera droit — c'est le sommet plat qui passe par-dessus l'objet."
+  },
+  svg:{b2bA:"stub", b2bB:"dos à dos",markAt:"marque à", width:"largeur objet", realBend:"pli réel", theoretical:"angle théorique", continues:"continue tout droit"},
+  codeModalTitle:"Code créateur",
+  codeCancel:"Annuler",
+  codeSubmit:"Valider",
+  codeWrong:"Code incorrect.",
+  adminTitle:"Panel créateur",
+  adminExit:"Quitter",
+  adminNote:"Abonnés réels (Supabase). Le prix réel se change dans Stripe (Produits).",
+  adminPriceTitle:"Abonnement",
+  adminPriceLabel:"Prix mensuel (une fois Stripe connecté, ceci changera le vrai prix)",
+  adminSavePrice:"Enregistrer",
+  adminPriceSaved:"Enregistré localement.",
+  adminUsersTitle:"Utilisateurs",
+  adminUsersEmpty:"Aucun utilisateur pour le moment — connecte Supabase pour voir et gérer les comptes (bannir, offrir un mois gratuit, etc.).",
+  auth:{
+    loginTitle:"Se connecter", signupTitle:"Créer un compte", forgotTitle:"Mot de passe oublié", resetTitle:"Nouveau mot de passe",
+    emailLabel:"Courriel", passwordLabel:"Mot de passe", confirmLabel:"Confirmer le mot de passe", newPasswordLabel:"Nouveau mot de passe",
+    loginBtn:"Se connecter", signupBtn:"Créer le compte", forgotBtn:"Envoyer le lien", resetBtn:"Changer le mot de passe",
+    toSignup:"Pas de compte ? Crée-en un", toLogin:"Déjà un compte ? Connecte-toi", toForgot:"Mot de passe oublié ?", backToLogin:"Retour à la connexion",
+    logout:"Déconnexion", changePassword:"Changer le mot de passe",
+    errInvalid:"Courriel ou mot de passe incorrect.", errMismatch:"Les mots de passe ne correspondent pas.", errGeneric:"Une erreur est survenue. Réessaie.",
+    signupSuccess:"Compte créé ! Vérifie ton courriel pour confirmer, puis connecte-toi.",
+    forgotSuccess:"Si ce courriel existe, un lien de réinitialisation vient d'être envoyé.",
+    resetSuccess:"Mot de passe changé avec succès.",
+    changeSuccess:"Mot de passe mis à jour.",
+    bannedTitle:"Compte suspendu", bannedMsg:"Ton accès à BendMark a été suspendu. Contacte le support si tu penses que c'est une erreur.",
+    expiredTitle:"Abonnement expiré", expiredMsg:"Ton abonnement est terminé. Réabonne-toi pour 3 $ par mois pour continuer.",
+    trialMsg:"Essai gratuit actif jusqu'au",
+    launchTitle:"5 essais gratuits seulement",
+    launchMsg:"Tu as droit à 5 calculs gratuits. Ensuite, l'accès à BendMark coûte 3 $ par mois. Un seul compte par personne et par courriel.",
+    trialsLeft:"Essais gratuits restants : {n} / 5",
+    subActive:"Abonnement actif jusqu'au",
+    paywallTitle:"Tes 5 essais gratuits sont terminés",
+    paywallMsg:"Pour continuer à utiliser BendMark, abonne-toi pour 3 $ par mois. Paiement sécurisé par carte, renouvelé automatiquement chaque mois, annulable à tout moment.",
+    errDisposable:"Les adresses courriel temporaires ne sont pas acceptées. Utilise ton vrai courriel.", errEmailTaken:"Ce courriel est déjà utilisé. Un seul compte par personne — connecte-toi avec ton compte existant."
+  }
+},
+en:{
+  bendTypeTitle:"1. Bend type",
+  pipeBenderTitle:"2. Pipe and bender",
+  detailsTitle:"3. Bend details",
+  resultTitle:"Result",
+  unitLabel:"Unit system",
+  units:{"in":"Inches", "ft":"Feet", "mm":"Millimeters", "cm":"Centimeters", "m":"Meters"},
+  pipeSizeLabel:"Pipe diameter",
+  benderLabel:"Bender",
+  voiceMinus:"minus", voiceEquals:"equals", adminUnlimited:"Creator access — unlimited",
+  voiceTitle:"Voice command",
+  voiceBtn:"🎤 Speak",
+  voiceStop:"⏹ Stop",
+  voiceListening:"Listening… say your calculation.",
+  voiceHint:"“offset 2 inches at 30 degrees 1 foot from the end”, Examples: “offset 4 inches at 30 degrees”, “90 of 20 inches”, “back to back 10 and 30”, “kick 2 inches at 22 degrees”, “three point height 3”, “four point width 6 height 3”.",
+  voiceHeard:"Heard:",
+  voiceNotUnderstood:"I didn't understand the bend type or the measurements. Try again with one of the examples.",
+  voiceUnsupported:"Voice command isn't available in this browser. Use Chrome (Android) or Safari (iPhone).",
+  voiceMicDenied:"Microphone access denied. Allow the microphone in your browser settings.",
+  voiceReplay:"🔊 Listen to the instructions again",
+  voiceIntro:"Here is your calculation.",
+  voiceStepsIntro:"Steps to follow.",
+  voiceInch:"inches", voiceDeg:"degrees",
+  subscribeBtn:"Subscribe — $3/month",
+  manageSub:"Manage my subscription",
+  paymentError:"Payment couldn't start. Try again in a moment.",
+  paymentPending:"Payment received! Activating your subscription…",
+  adLabel:"Advertisement",
+  g:{"offStart": "Distance from the pipe end to mark 1 (optional)", "threeStart": "Distance from the pipe end to the center of the obstacle (optional)", "fourStart": "Distance from the pipe end to the edge of the obstacle (optional)", "offNote": "Pipe diameter doesn't change an offset calculation: only the height and the angle matter.", "mult": "Multiplier", "calc": "Math", "shrink": "Shrink (the pipe gets shorter by)", "between": "Between the 2 marks", "markN": "Mark {n} (from the end)", "markRel": "Mark {n} (from mark 1)", "center": "Center mark (from the end)", "side": "Center to each mark", "fourShort": "Not enough pipe before the obstacle: increase the distance from the end.", "feetWord": "feet", "off1": "Math: height {depth} × multiplier {k} (for {angle}°) = {dist}. That is the distance between the 2 marks.", "off2a": "Measure {start} from the end of the pipe and make mark 1 all the way around the pipe.", "off2b": "Make mark 1 where the offset must start.", "off3": "From mark 1, measure {dist} toward the rest of the pipe and make mark 2{at}.", "off4": "Put the bender on the pipe, arrow exactly on mark 1, hook facing the end of the pipe.", "off5": "Heavy foot pressure, bend to {angle}° (the bender's {angle}° mark). No more.", "off6": "Take the bender off and roll the pipe half a turn (180°).", "off7": "Put the arrow on mark 2. Make sure the pipe sits straight in the bender: the first bend must point exactly the opposite way, in the same plane (sight down the pipe), or the offset will be twisted.", "off8": "Bend the other way to {angle}°. Both straight parts of the pipe become parallel again.", "off9": "Check: laid flat, the gap between the two straight parts must be {depth}. The pipe got {shrink} shorter: if your final measurement comes from the other end, add {shrink}.", "kick1": "Math: height {depth} × multiplier {k} (for {angle}°) = {dist}.", "kick2": "Measure {dist} from the end of the pipe that must lift and make a clean mark all the way around.", "kick3": "Put the bender on, arrow exactly on the mark, hook facing that end.", "kick4": "Heavy foot pressure, bend to {angle}°, no more.", "kick5": "Check: laid flat, the end of the pipe must be lifted {depth}. One bend only: no second mark.", "three1": "Math: height {h} × 2.5 = {dist} (center to each mark). Shrink: {h} × 3/16 = {shrink}.", "three2a": "Measure {center} from the end of the pipe and make the center mark ({start} to the center of the obstacle + {shrink} shrink).", "three2b": "Make the center mark where the pipe must cross over the center of the obstacle. If you measure from the end, add {shrink} shrink.", "three3": "Measure {dist} on each side of the center mark and make marks 1 and 3.", "three4": "Line the center mark up with the bender's saddle mark (notch or teardrop) — or the arrow if it has none — and bend to 45°.", "three5": "Roll the pipe half a turn (180°), put mark 1 on the arrow, pipe straight in the same plane, and bend to 22.5°.", "three6": "Turn the pipe end for end, put mark 3 on the arrow (still the same plane) and bend to 22.5°.", "three7": "Check: the top of the saddle must be {h} high and both ends of the pipe in line.", "four1": "Math: height {h} × 2 (30°) = {d} between the marks of each offset. Obstacle width {w} = space between marks 2 and 3. Total shrink: {shrink}.", "four2a": "Measure from the end of the pipe: mark 1 at {m1}, mark 2 at {m2} ({start} to the obstacle + {s1} shrink), mark 3 at {m3}, mark 4 at {m4}.", "four2b": "Make mark 1, then from mark 1: mark 2 at {d}, mark 3 at {m3r}, mark 4 at {m4r}.", "four3": "Arrow on mark 1, hook toward the end of the pipe: bend to 30°.", "four4": "Roll the pipe half a turn (180°), arrow on mark 2, pipe straight in the same plane: bend to 30°. The first offset is done.", "four5": "Keep the same orientation, arrow on mark 3: bend to 30°.", "four6": "Roll the pipe half a turn, arrow on mark 4: bend to 30°. The pipe comes back down and runs straight.", "four7": "Check: the flat top between marks 2 and 3 must clear {h} over a length of {w}, and both ends must be in line."},
+  calcBtn:"Calculate",
+  legendMark:"mark on the pipe",
+  legendBend:"bend point",
+  upsellTitle:"BendMark Pro — $3/month",
+  upsellDesc:"Unlimited access to every calculation and voice command. Secure payment, cancel anytime.",
+  adSlot:"ad placement",
+  comingSoon:" (coming soon)",
+  bendNames:{b2b:"Back to Back — two 90s back to back (U)",offset:"Offset — go around an obstacle (2 bends)",bend90:"90° bend — right-angle bend",kick:"Kick — small adjustment (1 bend)",three:"Three point — 3-bend saddle",four:"Four point — 4-bend saddle"},
+  vendorNames:{manual:"Hand bender",hydraulic:"Hydraulic bender",oneshot:"One-shot bender",electric:"Electric bender"},
+  fields:{
+    b2bStub:"First 90° height (stub)", b2bDist:"Back-to-back distance (outside to outside)",
+    offsetDepth:"Obstacle depth",
+    offsetAngle:"Bend angle",
+    bend90Length:"Final length wanted after the bend",
+    bend90Hint:"Example: 1\" pipe (8\" take-up). For a 28\" 90, the app calculates 28 − 8 = 20\": mark 20\" from the end and put that mark on the bender arrow.",
+    kickDepth:"Offset height",
+    kickAngle:"Bend angle",
+    threeHeight:"Height of the object to clear",
+    fourWidth:"Object width",
+    fourHeight:"Object height"
+  },
+  phPrefix:"e.g.",
+  errors:{
+    b2bDims:"Enter the stub height and the back-to-back distance.", b2bTooSmall:"The stub height must be greater than the take-up ({tu}).",
+    offsetDepth:"Enter the obstacle depth.",
+    bend90Length:"Enter the desired final length.",
+    bend90TooSmall:"The desired length must be greater than the take-up ({tu}{U}).",
+    kickDepth:"Enter the offset height.",
+    threeHeight:"Enter the object height.",
+    fourDims:"Enter the object width and height."
+  },
+  marks:{
+    b2bStub:"Stub height", b2bTakeup:"Take-up", b2bMark1:"Mark 1 (from the end of the pipe)", b2bDist:"Mark 2 (from the back of the 1st 90)",
+    offsetDepth:"Offset depth", offsetAngle:"Angle of the 2 bends", pipeSize:"Pipe diameter", offsetDist:"Distance between the 2 marks",
+    bend90Size:"Diameter", bend90Takeup:"Take-up", bend90Length:"Desired final length", bend90Calc:"Math", bend90Mark:"Mark to make (from the end)",
+    kickDepth:"Offset height", kickAngle:"Angle", kickDist:"Distance from the end of the pipe",
+    threeHeight:"Object height", threeConst:"Constant (fixed)", threeDist:"Distance from center to each mark",
+    fourWidth:"Object width", fourHeight:"Object height", fourGap:"Gap between marks 1 and 2 (bottom)", fourOffset:"Offset to marks 3 and 4"
+  },
+  steps:{
+    b2b1:"Measure {mark1} from the end of the pipe and make mark 1 ({stub} stub minus {tu} take-up).", b2b2:"Put mark 1 on the bender arrow and bend to 90° — that is your first stub.", b2b3:"Measure {dist} from the back (outside) of the first 90, along the pipe, and make mark 2.", b2b4:"Reverse the bender on the pipe, line mark 2 up with the star (back-of-bend mark) and bend to 90° — both stubs must point the same way.", b2b5:"Check: the outside distance between the two stubs must be {dist}.",
+    offset1:"Make the first mark (arrow) where the offset should begin.",
+    offset2:"Measure {dist}{U} from that mark, in the direction the pipe continues, and make a second mark.",
+    offset3:"Bend {angle}° at the first mark, away from the obstacle.",
+    offset4:"Bend {angle}° at the second mark, opposite the first bend, to bring the pipe back parallel to its original line.",
+    bend90_1:"Math: wanted length {length} − take-up {tu} ({size} pipe) = {mark}. The take-up is the length the bend “eats”, that's why we subtract it.",
+    bend90_2:"Measure {mark} from the end of the pipe and make a clean mark all the way around the pipe.",
+    bend90_3:"Lay the pipe on the floor and slide the bender on, with the hook facing the end you measured from.",
+    bend90_4:"Line the mark up exactly with the arrow on the bender — that is where the 90° forms.",
+    bend90_5:"Keep heavy foot pressure on the bender's step and pull the handle in one steady motion, no jerking.",
+    bend90_6:"Stop when the pipe is at 90°: check with the bubble level or the bender's 90° mark. Don't go past it.",
+    bend90_7:"Check: from the floor to the end of the pipe (back of the bend) you should measure {length}. The {tu} take-up is for an EMT hand bender; if your bender shows a different number, use that one.",
+    kick1:"Measure {dist}{U} from the end of the pipe and make a single mark.",
+    kick2:"Bend {angle}° at that mark, in the direction of the wanted offset.",
+    kick3:"Only one bend — no second mark needed for a kick.",
+    three1:"Mark the center of the pipe — this will be the peak, bent at 45°.",
+    three2:"Measure {dist}{U} on each side of the center and make two marks.",
+    three3:"Bend the center to 45°.",
+    three4:"Bend each side mark to 22.5°, opposite the center bend.",
+    four1:"Mark the pipe at points 1 and 2, {width}{U} apart (the exact width of the object).",
+    four2:"From each mark, measure {offset}{U} outward and make marks 3 and 4.",
+    four3:"Bend all 4 marks to 30° each, toward the flat top.",
+    four4:"The section between marks 1 and 2 stays straight — that's the flat top that clears the object."
+  },
+  svg:{b2bA:"stub", b2bB:"back to back",markAt:"mark at", width:"object width", realBend:"actual bend", theoretical:"theoretical angle", continues:"continues straight on"},
+  codeModalTitle:"Creator code",
+  codeCancel:"Cancel",
+  codeSubmit:"Submit",
+  codeWrong:"Incorrect code.",
+  adminTitle:"Creator panel",
+  adminExit:"Exit",
+  adminNote:"Real subscribers (Supabase). The real price is changed in Stripe (Products).",
+  adminPriceTitle:"Subscription",
+  adminPriceLabel:"Monthly price (once Stripe is connected, this will change the real price)",
+  adminSavePrice:"Save",
+  adminPriceSaved:"Saved locally.",
+  adminUsersTitle:"Users",
+  adminUsersEmpty:"No users yet — connect Supabase to see and manage accounts (ban, grant a free month, etc.).",
+  auth:{
+    loginTitle:"Log in", signupTitle:"Create an account", forgotTitle:"Forgot password", resetTitle:"New password",
+    emailLabel:"Email", passwordLabel:"Password", confirmLabel:"Confirm password", newPasswordLabel:"New password",
+    loginBtn:"Log in", signupBtn:"Create account", forgotBtn:"Send reset link", resetBtn:"Change password",
+    toSignup:"No account? Create one", toLogin:"Already have an account? Log in", toForgot:"Forgot password?", backToLogin:"Back to login",
+    logout:"Log out", changePassword:"Change password",
+    errInvalid:"Incorrect email or password.", errMismatch:"Passwords do not match.", errGeneric:"Something went wrong. Try again.",
+    signupSuccess:"Account created! Check your email to confirm, then log in.",
+    forgotSuccess:"If that email exists, a reset link was just sent.",
+    resetSuccess:"Password changed successfully.",
+    changeSuccess:"Password updated.",
+    bannedTitle:"Account suspended", bannedMsg:"Your access to BendMark has been suspended. Contact support if you think this is a mistake.",
+    expiredTitle:"Subscription expired", expiredMsg:"Your subscription has ended. Subscribe again for $3 per month to continue.",
+    trialMsg:"Free trial active until",
+    launchTitle:"Only 5 free tries",
+    launchMsg:"You get 5 free calculations. After that, BendMark costs $3 per month. One account per person and per email.",
+    trialsLeft:"Free tries left: {n} / 5",
+    subActive:"Subscription active until",
+    paywallTitle:"Your 5 free tries are used up",
+    paywallMsg:"To keep using BendMark, subscribe for $3 per month. Secure card payment, renewed automatically every month, cancel anytime.",
+    errDisposable:"Temporary email addresses are not accepted. Use your real email.", errEmailTaken:"This email is already in use. One account per person — log in with your existing account."
+  }
+},
+es:{
+  bendTypeTitle:"1. Tipo de doblez",
+  pipeBenderTitle:"2. Tubo y dobladora",
+  detailsTitle:"3. Detalles del doblez",
+  resultTitle:"Resultado",
+  unitLabel:"Sistema de unidades",
+  units:{"in":"Pulgadas", "ft":"Pies", "mm":"Milímetros", "cm":"Centímetros", "m":"Metros"},
+  pipeSizeLabel:"Diámetro del tubo",
+  benderLabel:"Dobladora",
+  voiceMinus:"menos", voiceEquals:"igual a", adminUnlimited:"Acceso de creador — ilimitado",
+  voiceTitle:"Comando de voz",
+  voiceBtn:"🎤 Hablar",
+  voiceStop:"⏹ Detener",
+  voiceListening:"Escuchando… di tu cálculo.",
+  voiceHint:"«offset de 2 pulgadas a 30 grados a 1 pie del extremo», Ejemplos: «offset de 4 pulgadas a 30 grados», «90 de 20 pulgadas», «back to back 10 y 30», «kick de 2 pulgadas a 22 grados», «three point altura 3», «four point ancho 6 altura 3».",
+  voiceHeard:"Entendido:",
+  voiceNotUnderstood:"No entendí el tipo de doblez o las medidas. Inténtalo de nuevo con uno de los ejemplos.",
+  voiceUnsupported:"El comando de voz no está disponible en este navegador. Usa Chrome (Android) o Safari (iPhone).",
+  voiceMicDenied:"Acceso al micrófono denegado. Permite el micrófono en los ajustes del navegador.",
+  voiceReplay:"🔊 Escuchar las instrucciones otra vez",
+  voiceIntro:"Aquí está tu cálculo.",
+  voiceStepsIntro:"Pasos a seguir.",
+  voiceInch:"pulgadas", voiceDeg:"grados",
+  subscribeBtn:"Suscribirse — 3 $/mes",
+  manageSub:"Gestionar mi suscripción",
+  paymentError:"No se pudo iniciar el pago. Inténtalo en un momento.",
+  paymentPending:"¡Pago recibido! Activando tu suscripción…",
+  adLabel:"Publicidad",
+  g:{"offStart": "Distancia del extremo del tubo a la marca 1 (opcional)", "threeStart": "Distancia del extremo del tubo al centro del obstáculo (opcional)", "fourStart": "Distancia del extremo del tubo al borde del obstáculo (opcional)", "offNote": "El diámetro del tubo no cambia el cálculo de un offset: solo cuentan la altura y el ángulo.", "mult": "Multiplicador", "calc": "Cálculo", "shrink": "Encogimiento (el tubo se acorta)", "between": "Entre las 2 marcas", "markN": "Marca {n} (desde el extremo)", "markRel": "Marca {n} (desde la marca 1)", "center": "Marca del centro (desde el extremo)", "side": "Del centro a cada marca", "fourShort": "No hay suficiente tubo antes del obstáculo: aumenta la distancia desde el extremo.", "feetWord": "pies", "off1": "Cálculo: altura {depth} × multiplicador {k} (para {angle}°) = {dist}. Es la distancia entre las 2 marcas.", "off2a": "Mide {start} desde el extremo del tubo y haz la marca 1 alrededor de todo el tubo.", "off2b": "Haz la marca 1 donde debe empezar el offset.", "off3": "Desde la marca 1, mide {dist} hacia el resto del tubo y haz la marca 2{at}.", "off4": "Pon la dobladora en el tubo, flecha exactamente en la marca 1, gancho hacia el extremo del tubo.", "off5": "Con el pie bien apoyado, dobla hasta {angle}° (marca de {angle}° de la dobladora). No más.", "off6": "Quita la dobladora y gira el tubo media vuelta (180°) sobre sí mismo.", "off7": "Pon la flecha en la marca 2. Verifica que el tubo esté derecho en la dobladora: el primer doblez debe quedar exactamente al lado opuesto, en el mismo plano (mira a lo largo del tubo), si no el offset quedará torcido.", "off8": "Dobla en el otro sentido hasta {angle}°. Las dos partes rectas del tubo vuelven a quedar paralelas.", "off9": "Verifica: en el suelo, la separación entre las dos partes rectas debe ser {depth}. El tubo se acortó {shrink}: si tu medida final viene del otro extremo, suma {shrink}.", "kick1": "Cálculo: altura {depth} × multiplicador {k} (para {angle}°) = {dist}.", "kick2": "Mide {dist} desde el extremo del tubo que debe levantarse y haz una marca clara alrededor.", "kick3": "Pon la dobladora, flecha exactamente en la marca, gancho hacia ese extremo.", "kick4": "Con el pie bien apoyado, dobla hasta {angle}°, no más.", "kick5": "Verifica: en el suelo, el extremo del tubo debe quedar levantado {depth}. Un solo doblez: no hace falta segunda marca.", "three1": "Cálculo: altura {h} × 2.5 = {dist} (del centro a cada marca). Encogimiento: {h} × 3/16 = {shrink}.", "three2a": "Mide {center} desde el extremo del tubo y haz la marca del centro ({start} hasta el centro del obstáculo + {shrink} de encogimiento).", "three2b": "Haz la marca del centro donde el tubo debe pasar sobre el centro del obstáculo. Si mides desde el extremo, suma {shrink} de encogimiento.", "three3": "Mide {dist} a cada lado de la marca del centro y haz las marcas 1 y 3.", "three4": "Alinea la marca del centro con la marca de silla (muesca o gota) de la dobladora — o con la flecha si no tiene — y dobla a 45°.", "three5": "Gira el tubo media vuelta (180°), pon la marca 1 en la flecha, tubo derecho en el mismo plano, y dobla a 22.5°.", "three6": "Voltea el tubo de punta a punta, pon la marca 3 en la flecha (en el mismo plano) y dobla a 22.5°.", "three7": "Verifica: la parte de arriba de la silla debe estar a {h} y los dos extremos alineados.", "four1": "Cálculo: altura {h} × 2 (30°) = {d} entre las marcas de cada offset. Ancho del obstáculo {w} = espacio entre las marcas 2 y 3. Encogimiento total: {shrink}.", "four2a": "Mide desde el extremo del tubo: marca 1 a {m1}, marca 2 a {m2} ({start} hasta el obstáculo + {s1} de encogimiento), marca 3 a {m3}, marca 4 a {m4}.", "four2b": "Haz la marca 1 y, desde la marca 1: marca 2 a {d}, marca 3 a {m3r}, marca 4 a {m4r}.", "four3": "Flecha en la marca 1, gancho hacia el extremo del tubo: dobla a 30°.", "four4": "Gira el tubo media vuelta (180°), flecha en la marca 2, tubo derecho en el mismo plano: dobla a 30°. El primer offset está hecho.", "four5": "Mantén la misma orientación, flecha en la marca 3: dobla a 30°.", "four6": "Gira el tubo media vuelta, flecha en la marca 4: dobla a 30°. El tubo baja y sigue recto.", "four7": "Verifica: la parte plana entre las marcas 2 y 3 debe pasar {h} por encima, a lo largo de {w}, y los dos extremos deben estar alineados."},
+  calcBtn:"Calcular",
+  legendMark:"marca en el tubo",
+  legendBend:"punto de doblez",
+  upsellTitle:"BendMark Pro — 3 $/mes",
+  upsellDesc:"Acceso ilimitado a todos los cálculos y al comando de voz. Pago seguro, cancela cuando quieras.",
+  adSlot:"espacio publicitario",
+  comingSoon:" (próximamente)",
+  bendNames:{b2b:"Back to Back — dos 90° espalda con espalda (U)",offset:"Offset — rodear un obstáculo (2 doblez)",bend90:"Doblez a 90° — ángulo recto",kick:"Kick — ajuste pequeño (1 doblez)",three:"Three point — silla de 3 doblez",four:"Four point — silla de 4 doblez"},
+  vendorNames:{manual:"Dobladora manual",hydraulic:"Dobladora hidráulica",oneshot:"One-shot",electric:"Dobladora eléctrica"},
+  fields:{
+    b2bStub:"Altura del primer 90° (stub)", b2bDist:"Distancia espalda con espalda (exterior a exterior)",
+    offsetDepth:"Profundidad del obstáculo",
+    offsetAngle:"Ángulo del doblez",
+    bend90Length:"Largo final deseado después del doblez",
+    bend90Hint:"Ejemplo: tubo de 1\" (take-up 8\"). Para un 90 de 28\", la app calcula 28 − 8 = 20\": marca 20\" desde el extremo y pon esa marca en la flecha de la dobladora.",
+    kickDepth:"Altura del desplazamiento",
+    kickAngle:"Ángulo del doblez",
+    threeHeight:"Altura del objeto a cruzar",
+    fourWidth:"Ancho del objeto",
+    fourHeight:"Altura del objeto"
+  },
+  phPrefix:"ej:",
+  errors:{
+    b2bDims:"Ingresa la altura del stub y la distancia espalda con espalda.", b2bTooSmall:"La altura del stub debe ser mayor que el take-up ({tu}).",
+    offsetDepth:"Ingresa la profundidad del obstáculo.",
+    bend90Length:"Ingresa el largo final deseado.",
+    bend90TooSmall:"El largo deseado debe ser mayor que el take-up ({tu}{U}).",
+    kickDepth:"Ingresa la altura del desplazamiento.",
+    threeHeight:"Ingresa la altura del objeto.",
+    fourDims:"Ingresa el ancho y la altura del objeto."
+  },
+  marks:{
+    b2bStub:"Altura del stub", b2bTakeup:"Take-up", b2bMark1:"Marca 1 (desde el extremo del tubo)", b2bDist:"Marca 2 (desde la espalda del 1er 90°)",
+    offsetDepth:"Profundidad del offset", offsetAngle:"Ángulo de los 2 doblez", pipeSize:"Diámetro del tubo", offsetDist:"Distancia entre las 2 marcas",
+    bend90Size:"Diámetro", bend90Takeup:"Take-up", bend90Length:"Largo final deseado", bend90Calc:"Cálculo", bend90Mark:"Marca a hacer (desde el extremo)",
+    kickDepth:"Altura del desplazamiento", kickAngle:"Ángulo", kickDist:"Distancia desde el extremo del tubo",
+    threeHeight:"Altura del objeto", threeConst:"Constante (fija)", threeDist:"Distancia del centro a cada marca",
+    fourWidth:"Ancho del objeto", fourHeight:"Altura del objeto", fourGap:"Separación marcas 1 y 2 (abajo)", fourOffset:"Desplazamiento a marcas 3 y 4"
+  },
+  steps:{
+    b2b1:"Mide {mark1} desde el extremo del tubo y haz la marca 1 (stub de {stub} menos el take-up de {tu}).", b2b2:"Pon la marca 1 en la flecha de la dobladora y dobla a 90°: es el primer stub.", b2b3:"Mide {dist} desde la espalda (el exterior) del primer 90°, a lo largo del tubo, y haz la marca 2.", b2b4:"Invierte la dobladora en el tubo, alinea la marca 2 con la estrella (marca de espalda) y dobla a 90°: los dos stubs deben apuntar al mismo lado.", b2b5:"Verifica: la distancia exterior entre los dos stubs debe ser {dist}.",
+    offset1:"Haz la primera marca (flecha) donde debe comenzar el offset.",
+    offset2:"Mide {dist}{U} desde esa marca, en el sentido en que continúa el tubo, y haz una segunda marca.",
+    offset3:"Dobla {angle}° en la primera marca, en dirección opuesta al obstáculo.",
+    offset4:"Dobla {angle}° en la segunda marca, en dirección opuesta al primer doblez, para que el tubo vuelva a quedar paralelo a su línea original.",
+    bend90_1:"Cálculo: largo deseado {length} − take-up {tu} (tubo {size}) = {mark}. El take-up es el largo que el doblez « se come », por eso se resta.",
+    bend90_2:"Mide {mark} desde el extremo del tubo y haz una marca clara alrededor de todo el tubo.",
+    bend90_3:"Pon el tubo en el suelo y desliza la dobladora, con el gancho hacia el extremo que mediste.",
+    bend90_4:"Alinea la marca exactamente con la flecha de la dobladora — ahí se forma el 90°.",
+    bend90_5:"Con el pie bien apoyado en el escalón de la dobladora, tira del mango en un movimiento constante, sin tirones.",
+    bend90_6:"Detente cuando el tubo esté a 90°: verifica con el nivel de burbuja o la marca de 90° de la dobladora. No te pases.",
+    bend90_7:"Verifica: desde el suelo hasta el extremo del tubo (espalda del doblez) debes medir {length}. El take-up de {tu} es para dobladora manual EMT; si tu dobladora indica otro número, usa ese.",
+    kick1:"Mide {dist}{U} desde el extremo del tubo y haz una sola marca.",
+    kick2:"Dobla {angle}° en esa marca, en la dirección del desplazamiento deseado.",
+    kick3:"Un solo doblez — no se necesita segunda marca para un kick.",
+    three1:"Marca el centro del tubo — será la cima, doblada a 45°.",
+    three2:"Mide {dist}{U} a cada lado del centro y haz dos marcas.",
+    three3:"Dobla el centro a 45°.",
+    three4:"Dobla cada marca lateral a 22.5°, en dirección opuesta al centro.",
+    four1:"Marca el tubo en los puntos 1 y 2, separados por {width}{U} (el ancho exacto del objeto).",
+    four2:"Desde cada marca, mide {offset}{U} hacia afuera y haz las marcas 3 y 4.",
+    four3:"Dobla las 4 marcas a 30° cada una, hacia la meseta plana.",
+    four4:"El tramo entre las marcas 1 y 2 queda recto — es la parte plana que pasa sobre el objeto."
+  },
+  svg:{b2bA:"stub", b2bB:"espalda con espalda",markAt:"marca a", width:"ancho objeto", realBend:"doblez real", theoretical:"ángulo teórico", continues:"continúa recto"},
+  codeModalTitle:"Código de creador",
+  codeCancel:"Cancelar",
+  codeSubmit:"Confirmar",
+  codeWrong:"Código incorrecto.",
+  adminTitle:"Panel del creador",
+  adminExit:"Salir",
+  adminNote:"Suscriptores reales (Supabase). El precio real se cambia en Stripe (Productos).",
+  adminPriceTitle:"Suscripción",
+  adminPriceLabel:"Precio mensual (una vez conectado Stripe, esto cambiará el precio real)",
+  adminSavePrice:"Guardar",
+  adminPriceSaved:"Guardado localmente.",
+  adminUsersTitle:"Usuarios",
+  adminUsersEmpty:"Aún no hay usuarios — conecta Supabase para ver y gestionar las cuentas (banear, dar un mes gratis, etc.).",
+  auth:{
+    loginTitle:"Iniciar sesión", signupTitle:"Crear una cuenta", forgotTitle:"Olvidé mi contraseña", resetTitle:"Nueva contraseña",
+    emailLabel:"Correo", passwordLabel:"Contraseña", confirmLabel:"Confirmar contraseña", newPasswordLabel:"Nueva contraseña",
+    loginBtn:"Iniciar sesión", signupBtn:"Crear cuenta", forgotBtn:"Enviar enlace", resetBtn:"Cambiar contraseña",
+    toSignup:"¿Sin cuenta? Crea una", toLogin:"¿Ya tienes cuenta? Inicia sesión", toForgot:"¿Olvidaste tu contraseña?", backToLogin:"Volver al inicio de sesión",
+    logout:"Cerrar sesión", changePassword:"Cambiar contraseña",
+    errInvalid:"Correo o contraseña incorrectos.", errMismatch:"Las contraseñas no coinciden.", errGeneric:"Algo salió mal. Intenta de nuevo.",
+    signupSuccess:"¡Cuenta creada! Revisa tu correo para confirmar y luego inicia sesión.",
+    forgotSuccess:"Si ese correo existe, se acaba de enviar un enlace de restablecimiento.",
+    resetSuccess:"Contraseña cambiada con éxito.",
+    changeSuccess:"Contraseña actualizada.",
+    bannedTitle:"Cuenta suspendida", bannedMsg:"Tu acceso a BendMark ha sido suspendido. Contacta al soporte si crees que es un error.",
+    expiredTitle:"Suscripción vencida", expiredMsg:"Tu suscripción terminó. Vuelve a suscribirte por 3 $ al mes para continuar.",
+    trialMsg:"Prueba gratuita activa hasta",
+    launchTitle:"Solo 5 pruebas gratis",
+    launchMsg:"Tienes 5 cálculos gratis. Después, BendMark cuesta 3 $ al mes. Una sola cuenta por persona y por correo.",
+    trialsLeft:"Pruebas gratis restantes: {n} / 5",
+    subActive:"Suscripción activa hasta",
+    paywallTitle:"Tus 5 pruebas gratis se terminaron",
+    paywallMsg:"Para seguir usando BendMark, suscríbete por 3 $ al mes. Pago seguro con tarjeta, renovación automática cada mes, cancela cuando quieras.",
+    errDisposable:"No se aceptan correos temporales. Usa tu correo real.", errEmailTaken:"Este correo ya está en uso. Una sola cuenta por persona — inicia sesión con tu cuenta existente."
+  }
+},
+ar:{
+  bendTypeTitle:"١. نوع الانحناء",
+  pipeBenderTitle:"٢. الأنبوب وآلة الثني",
+  detailsTitle:"٣. تفاصيل الانحناء",
+  resultTitle:"النتيجة",
+  unitLabel:"نظام القياس",
+  units:{"in":"بوصة", "ft":"قدم", "mm":"ملم", "cm":"سم", "m":"متر"},
+  pipeSizeLabel:"قطر الأنبوب",
+  benderLabel:"آلة الثني",
+  voiceMinus:"ناقص", voiceEquals:"يساوي", adminUnlimited:"وصول المنشئ — غير محدود",
+  voiceTitle:"الأوامر الصوتية",
+  voiceBtn:"🎤 تحدّث",
+  voiceStop:"⏹ إيقاف",
+  voiceListening:"أستمع… قل حسابك.",
+  voiceHint:"«أوفست 2 بوصة 30 درجة 1 قدم من الطرف»، أمثلة: «أوفست 4 بوصة 30 درجة»، «انحناء 90 طول 20 بوصة»، «باك تو باك 10 و 30»، «كيك 2 بوصة 22 درجة»، «ثري بوينت ارتفاع 3»، «فور بوينت عرض 6 ارتفاع 3».",
+  voiceHeard:"فهمت:",
+  voiceNotUnderstood:"لم أفهم نوع الانحناء أو القياسات. حاول مرة أخرى بأحد الأمثلة.",
+  voiceUnsupported:"الأوامر الصوتية غير متاحة في هذا المتصفح. استخدم Chrome (أندرويد) أو Safari (آيفون).",
+  voiceMicDenied:"تم رفض الوصول إلى الميكروفون. اسمح بالميكروفون في إعدادات المتصفح.",
+  voiceReplay:"🔊 الاستماع إلى الشرح مرة أخرى",
+  voiceIntro:"هذا هو حسابك.",
+  voiceStepsIntro:"الخطوات.",
+  voiceInch:"بوصة", voiceDeg:"درجة",
+  subscribeBtn:"اشترك — 3 دولارات شهرياً",
+  manageSub:"إدارة اشتراكي",
+  paymentError:"تعذّر بدء الدفع. حاول بعد لحظة.",
+  paymentPending:"تم استلام الدفع! جارٍ تفعيل اشتراكك…",
+  adLabel:"إعلان",
+  g:{"offStart": "المسافة من طرف الأنبوب إلى العلامة 1 (اختياري)", "threeStart": "المسافة من طرف الأنبوب إلى منتصف العائق (اختياري)", "fourStart": "المسافة من طرف الأنبوب إلى حافة العائق (اختياري)", "offNote": "قطر الأنبوب لا يغيّر حساب الأوفست: المهم هو الارتفاع والزاوية فقط.", "mult": "المضاعف", "calc": "الحساب", "shrink": "الانكماش (يقصر الأنبوب بمقدار)", "between": "بين العلامتين", "markN": "العلامة {n} (من الطرف)", "markRel": "العلامة {n} (من العلامة 1)", "center": "علامة المنتصف (من الطرف)", "side": "من المنتصف إلى كل علامة", "fourShort": "لا يوجد أنبوب كافٍ قبل العائق: زِد المسافة من الطرف.", "feetWord": "قدم", "off1": "الحساب: الارتفاع {depth} × المضاعف {k} (لزاوية {angle}°) = {dist}. هذه هي المسافة بين العلامتين.", "off2a": "قِس {start} من طرف الأنبوب وضع العلامة 1 حول الأنبوب بالكامل.", "off2b": "ضع العلامة 1 في المكان الذي يجب أن يبدأ فيه الأوفست.", "off3": "من العلامة 1، قِس {dist} باتجاه باقي الأنبوب وضع العلامة 2{at}.", "off4": "ضع الثنّاية على الأنبوب، والسهم تماماً على العلامة 1، والخطاف باتجاه طرف الأنبوب.", "off5": "اضغط بقدمك جيداً واثنِ حتى {angle}° (علامة {angle}° على الثنّاية). لا أكثر.", "off6": "انزع الثنّاية وأدر الأنبوب نصف دورة (180°) حول نفسه.", "off7": "ضع السهم على العلامة 2. تأكد أن الأنبوب مستقيم داخل الثنّاية: يجب أن يكون الانحناء الأول في الاتجاه المعاكس تماماً وفي نفس المستوى (انظر على طول الأنبوب)، وإلا سيكون الأوفست ملتوياً.", "off8": "اثنِ في الاتجاه الآخر حتى {angle}°. يعود الجزآن المستقيمان من الأنبوب متوازيين.", "off9": "تحقّق: على الأرض، يجب أن تكون المسافة بين الجزأين المستقيمين {depth}. قصُر الأنبوب بمقدار {shrink}: إذا كان قياسك النهائي من الطرف الآخر فأضف {shrink}.", "kick1": "الحساب: الارتفاع {depth} × المضاعف {k} (لزاوية {angle}°) = {dist}.", "kick2": "قِس {dist} من طرف الأنبوب الذي يجب أن يرتفع وضع علامة واضحة حوله.", "kick3": "ضع الثنّاية، والسهم تماماً على العلامة، والخطاف باتجاه ذلك الطرف.", "kick4": "اضغط بقدمك جيداً واثنِ حتى {angle}°، لا أكثر.", "kick5": "تحقّق: على الأرض، يجب أن يرتفع طرف الأنبوب بمقدار {depth}. انحناء واحد فقط: لا حاجة لعلامة ثانية.", "three1": "الحساب: الارتفاع {h} × 2.5 = {dist} (من المنتصف إلى كل علامة). الانكماش: {h} × 3/16 = {shrink}.", "three2a": "قِس {center} من طرف الأنبوب وضع علامة المنتصف ({start} حتى منتصف العائق + {shrink} انكماش).", "three2b": "ضع علامة المنتصف حيث يجب أن يمر الأنبوب فوق منتصف العائق. إذا قست من الطرف فأضف {shrink} انكماش.", "three3": "قِس {dist} على كل جانب من علامة المنتصف وضع العلامتين 1 و 3.", "three4": "طابق علامة المنتصف مع علامة السرج (الحزّ أو القطرة) على الثنّاية — أو مع السهم إن لم توجد — واثنِ إلى 45°.", "three5": "أدر الأنبوب نصف دورة (180°)، ضع العلامة 1 على السهم، والأنبوب مستقيم في نفس المستوى، واثنِ إلى 22.5°.", "three6": "اقلب الأنبوب طرفاً لطرف، ضع العلامة 3 على السهم (في نفس المستوى) واثنِ إلى 22.5°.", "three7": "تحقّق: يجب أن يكون أعلى السرج على ارتفاع {h} وطرفا الأنبوب على خط واحد.", "four1": "الحساب: الارتفاع {h} × 2 (30°) = {d} بين علامتي كل أوفست. عرض العائق {w} = المسافة بين العلامتين 2 و 3. الانكماش الكلي: {shrink}.", "four2a": "قِس من طرف الأنبوب: العلامة 1 عند {m1}، العلامة 2 عند {m2} ({start} حتى العائق + {s1} انكماش)، العلامة 3 عند {m3}، العلامة 4 عند {m4}.", "four2b": "ضع العلامة 1، ثم من العلامة 1: العلامة 2 عند {d}، العلامة 3 عند {m3r}، العلامة 4 عند {m4r}.", "four3": "السهم على العلامة 1، والخطاف نحو طرف الأنبوب: اثنِ إلى 30°.", "four4": "أدر الأنبوب نصف دورة (180°)، السهم على العلامة 2، والأنبوب مستقيم في نفس المستوى: اثنِ إلى 30°. انتهى الأوفست الأول.", "four5": "حافظ على نفس الاتجاه، السهم على العلامة 3: اثنِ إلى 30°.", "four6": "أدر الأنبوب نصف دورة، السهم على العلامة 4: اثنِ إلى 30°. ينزل الأنبوب ويستمر مستقيماً.", "four7": "تحقّق: يجب أن يمر الجزء المسطح بين العلامتين 2 و 3 فوق العائق بارتفاع {h} وبطول {w}، ويكون الطرفان على خط واحد."},
+  calcBtn:"احسب",
+  legendMark:"علامة على الأنبوب",
+  legendBend:"نقطة الانحناء",
+  upsellTitle:"BendMark Pro — 3 دولار شهرياً",
+  upsellDesc:"وصول غير محدود لكل الحسابات والأوامر الصوتية. دفع آمن، ويمكن الإلغاء في أي وقت.",
+  adSlot:"مساحة إعلانية",
+  comingSoon:" (قريباً)",
+  bendNames:{b2b:"باك تو باك — انحناءان ٩٠° متقابلان (U)",offset:"أوفست — الالتفاف حول عائق (انحناءان)",bend90:"انحناء ٩٠° — زاوية قائمة",kick:"كيك — تعديل صغير (انحناء واحد)",three:"ثري بوينت — سرج بثلاث انحناءات",four:"فور بوينت — سرج بأربع انحناءات"},
+  vendorNames:{manual:"آلة ثني يدوية",hydraulic:"آلة ثني هيدروليكية",oneshot:"آلة ون شوت",electric:"آلة ثني كهربائية"},
+  fields:{
+    b2bStub:"ارتفاع أول ٩٠° (ستاب)", b2bDist:"المسافة ظهر لظهر (من الخارج إلى الخارج)",
+    offsetDepth:"عمق العائق",
+    offsetAngle:"زاوية الانحناء",
+    bend90Length:"الطول النهائي المطلوب بعد الانحناء",
+    bend90Hint:"مثال: أنبوب 1\" (تيك أب 8\"). لانحناء ٩٠ بطول 28\"، يحسب التطبيق 28 − 8 = 20\": ضع علامة على بعد 20\" من الطرف وضعها على سهم الثنّاية.",
+    kickDepth:"ارتفاع الإزاحة",
+    kickAngle:"زاوية الانحناء",
+    threeHeight:"ارتفاع العائق المراد تجاوزه",
+    fourWidth:"عرض العائق",
+    fourHeight:"ارتفاع العائق"
+  },
+  phPrefix:"مثال:",
+  errors:{
+    b2bDims:"أدخل ارتفاع الستاب والمسافة ظهر لظهر.", b2bTooSmall:"يجب أن يكون ارتفاع الستاب أكبر من التيك أب ({tu}).",
+    offsetDepth:"أدخل عمق العائق.",
+    bend90Length:"أدخل الطول النهائي المطلوب.",
+    bend90TooSmall:"يجب أن يكون الطول المطلوب أكبر من الـ take-up ({tu}{U}).",
+    kickDepth:"أدخل ارتفاع الإزاحة.",
+    threeHeight:"أدخل ارتفاع العائق.",
+    fourDims:"أدخل عرض وارتفاع العائق."
+  },
+  marks:{
+    b2bStub:"ارتفاع الستاب", b2bTakeup:"التيك أب", b2bMark1:"العلامة 1 (من طرف الأنبوب)", b2bDist:"العلامة 2 (من ظهر أول ٩٠°)",
+    offsetDepth:"عمق الإزاحة", offsetAngle:"زاوية الانحناءين", pipeSize:"قطر الأنبوب", offsetDist:"المسافة بين العلامتين",
+    bend90Size:"القطر", bend90Takeup:"Take-up", bend90Length:"الطول النهائي المطلوب", bend90Calc:"الحساب", bend90Mark:"العلامة المطلوبة (من الطرف)",
+    kickDepth:"ارتفاع الإزاحة", kickAngle:"الزاوية", kickDist:"المسافة من طرف الأنبوب",
+    threeHeight:"ارتفاع العائق", threeConst:"الثابت (ثابت)", threeDist:"المسافة من المركز إلى كل علامة",
+    fourWidth:"عرض العائق", fourHeight:"ارتفاع العائق", fourGap:"الفاصل بين العلامتين ١ و٢ (أسفل)", fourOffset:"الإزاحة نحو العلامتين ٣ و٤"
+  },
+  steps:{
+    b2b1:"قِس {mark1} من طرف الأنبوب وضع العلامة 1 (ستاب {stub} ناقص تيك أب {tu}).", b2b2:"ضع العلامة 1 على سهم الثنّاية واثنِ إلى ٩٠°: هذا هو الستاب الأول.", b2b3:"قِس {dist} من ظهر (خارج) أول ٩٠° على طول الأنبوب وضع العلامة 2.", b2b4:"اقلب الثنّاية على الأنبوب، وطابق العلامة 2 مع النجمة (علامة ظهر الانحناء) واثنِ إلى ٩٠°: يجب أن يتجه الستابان إلى نفس الجهة.", b2b5:"تحقّق: المسافة الخارجية بين الستابين يجب أن تكون {dist}.",
+    offset1:"ضع العلامة الأولى (السهم) حيث يجب أن تبدأ الإزاحة.",
+    offset2:"قِس {dist}{U} من هذه العلامة، باتجاه استمرار الأنبوب، وضع علامة ثانية.",
+    offset3:"اثنِ بزاوية {angle}° عند العلامة الأولى، بعيداً عن العائق.",
+    offset4:"اثنِ بزاوية {angle}° عند العلامة الثانية، بعكس الانحناء الأول، لإعادة الأنبوب موازياً لخطه الأصلي.",
+    bend90_1:"الحساب: الطول المطلوب {length} − التيك أب {tu} (أنبوب {size}) = {mark}. التيك أب هو الطول الذي «يأكله» الانحناء، لذلك نطرحه.",
+    bend90_2:"قِس {mark} من طرف الأنبوب وضع علامة واضحة حول الأنبوب بالكامل.",
+    bend90_3:"ضع الأنبوب على الأرض وأدخل الثنّاية عليه، مع توجيه الخطاف نحو الطرف الذي قست منه.",
+    bend90_4:"طابق العلامة تماماً مع سهم الثنّاية — هناك يتكوّن الـ ٩٠°.",
+    bend90_5:"اضغط بقدمك جيداً على درجة الثنّاية واسحب المقبض بحركة منتظمة دون اهتزاز.",
+    bend90_6:"توقف عندما يصبح الأنبوب على ٩٠°: تحقّق بميزان الفقاعة أو علامة ٩٠° على الثنّاية. لا تتجاوزها.",
+    bend90_7:"تحقّق: من الأرض حتى طرف الأنبوب (ظهر الانحناء) يجب أن تقيس {length}. التيك أب {tu} خاص بثنّاية EMT يدوية؛ إذا كانت ثنّايتك تشير إلى رقم آخر فاستخدمه.",
+    kick1:"قِس {dist}{U} من طرف الأنبوب وضع علامة واحدة فقط.",
+    kick2:"اثنِ بزاوية {angle}° عند هذه العلامة، باتجاه الإزاحة المطلوبة.",
+    kick3:"انحناء واحد فقط — لا حاجة لعلامة ثانية في الكيك.",
+    three1:"ضع علامة في منتصف الأنبوب — ستكون القمة، بزاوية ٤٥°.",
+    three2:"قِس {dist}{U} على كل جانب من المركز وضع علامتين.",
+    three3:"اثنِ المركز بزاوية ٤٥°.",
+    three4:"اثنِ كل علامة جانبية بزاوية ٢٢.٥°، بعكس اتجاه المركز.",
+    four1:"ضع علامة عند النقطتين ١ و٢، بينهما {width}{U} (عرض العائق بالضبط).",
+    four2:"من كل علامة، قِس {offset}{U} إلى الخارج وضع العلامتين ٣ و٤.",
+    four3:"اثنِ العلامات الأربع بزاوية ٣٠° لكل منها، نحو السطح المستوي العلوي.",
+    four4:"الجزء بين العلامتين ١ و٢ يبقى مستقيماً — هذا هو السطح المستوي الذي يعبر فوق العائق."
+  },
+  svg:{b2bA:"ستاب", b2bB:"ظهر لظهر",markAt:"علامة عند", width:"عرض العائق", realBend:"الانحناء الفعلي", theoretical:"الزاوية النظرية", continues:"يستمر مستقيماً"},
+  codeModalTitle:"رمز المنشئ",
+  codeCancel:"إلغاء",
+  codeSubmit:"تأكيد",
+  codeWrong:"رمز غير صحيح.",
+  adminTitle:"لوحة المنشئ",
+  adminExit:"خروج",
+  adminNote:"مشتركون حقيقيون (Supabase). يتم تغيير السعر الحقيقي في Stripe (المنتجات).",
+  adminPriceTitle:"الاشتراك",
+  adminPriceLabel:"السعر الشهري (بمجرد ربط Stripe، سيغيّر هذا السعر الفعلي)",
+  adminSavePrice:"حفظ",
+  adminPriceSaved:"تم الحفظ محلياً.",
+  adminUsersTitle:"المستخدمون",
+  adminUsersEmpty:"لا يوجد مستخدمون بعد — قم بربط Supabase لعرض الحسابات وإدارتها (حظر، منح شهر مجاني، إلخ).",
+  auth:{
+    loginTitle:"تسجيل الدخول", signupTitle:"إنشاء حساب", forgotTitle:"نسيت كلمة المرور", resetTitle:"كلمة مرور جديدة",
+    emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور", confirmLabel:"تأكيد كلمة المرور", newPasswordLabel:"كلمة مرور جديدة",
+    loginBtn:"تسجيل الدخول", signupBtn:"إنشاء الحساب", forgotBtn:"إرسال رابط الاستعادة", resetBtn:"تغيير كلمة المرور",
+    toSignup:"لا يوجد حساب؟ أنشئ واحداً", toLogin:"لديك حساب بالفعل؟ سجّل الدخول", toForgot:"نسيت كلمة المرور؟", backToLogin:"العودة لتسجيل الدخول",
+    logout:"تسجيل الخروج", changePassword:"تغيير كلمة المرور",
+    errInvalid:"البريد الإلكتروني أو كلمة المرور غير صحيحة.", errMismatch:"كلمتا المرور غير متطابقتين.", errGeneric:"حدث خطأ ما. حاول مرة أخرى.",
+    signupSuccess:"تم إنشاء الحساب! تحقق من بريدك الإلكتروني للتأكيد ثم سجّل الدخول.",
+    forgotSuccess:"إذا كان هذا البريد موجوداً، فقد تم للتو إرسال رابط إعادة التعيين.",
+    resetSuccess:"تم تغيير كلمة المرور بنجاح.",
+    changeSuccess:"تم تحديث كلمة المرور.",
+    bannedTitle:"الحساب موقوف", bannedMsg:"تم تعليق وصولك إلى BendMark. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.",
+    expiredTitle:"انتهى الاشتراك", expiredMsg:"انتهى اشتراكك. اشترك مجدداً مقابل 3 دولارات شهرياً للمتابعة.",
+    trialMsg:"الفترة التجريبية المجانية سارية حتى",
+    launchTitle:"5 محاولات مجانية فقط",
+    launchMsg:"لديك 5 حسابات مجانية. بعد ذلك، يكلف BendMark ‏3 دولارات شهرياً. حساب واحد لكل شخص ولكل بريد إلكتروني.",
+    trialsLeft:"المحاولات المجانية المتبقية: {n} / 5",
+    subActive:"الاشتراك ساري حتى",
+    paywallTitle:"انتهت محاولاتك المجانية الخمس",
+    paywallMsg:"لمواصلة استخدام BendMark، اشترك مقابل 3 دولارات شهرياً. دفع آمن بالبطاقة، يتجدد تلقائياً كل شهر، ويمكن الإلغاء في أي وقت.",
+    errDisposable:"عناوين البريد المؤقتة غير مقبولة. استخدم بريدك الحقيقي.", errEmailTaken:"هذا البريد الإلكتروني مستخدم بالفعل. حساب واحد لكل شخص — سجّل الدخول بحسابك الحالي."
+  }
+},
+ht:{
+  bendTypeTitle:"1. Kalite pliyay",
+  pipeBenderTitle:"2. Tiyo ak kentrèz",
+  detailsTitle:"3. Detay pliyay la",
+  resultTitle:"Rezilta",
+  unitLabel:"Sistèm inite",
+  units:{"in":"Pous", "ft":"Pye", "mm":"Milimèt", "cm":"Santimèt", "m":"Mèt"},
+  pipeSizeLabel:"Dyamèt tiyo a",
+  benderLabel:"Kentrèz",
+  voiceMinus:"mwens", voiceEquals:"egal", adminUnlimited:"Aksè kreyatè — san limit",
+  voiceTitle:"Kòmand vokal",
+  voiceBtn:"🎤 Pale",
+  voiceStop:"⏹ Rete",
+  voiceListening:"M ap koute… di kalkil ou.",
+  voiceHint:"« ofsèt 2 pous a 30 degre 1 pye depi bout », Egzanp: « ofsèt 4 pous a 30 degre », « 90 de 20 pous », « back to back 10 ak 30 », « kick 2 pous a 22 degre », « three point wotè 3 », « four point lajè 6 wotè 3 ».",
+  voiceHeard:"Konprann:",
+  voiceNotUnderstood:"M pa konprann kalite pliyay la oswa mezi yo. Eseye ankò ak youn nan egzanp yo.",
+  voiceUnsupported:"Kòmand vokal pa disponib sou navigatè sa a. Itilize Chrome (Android) oswa Safari (iPhone).",
+  voiceMicDenied:"Aksè mikwo a refize. Otorize mikwo a nan paramèt navigatè a.",
+  voiceReplay:"🔊 Koute eksplikasyon yo ankò",
+  voiceIntro:"Men kalkil ou.",
+  voiceStepsIntro:"Etap pou swiv.",
+  voiceInch:"pous", voiceDeg:"degre",
+  subscribeBtn:"Abòne — 3 $/mwa",
+  manageSub:"Jere abònman mwen",
+  paymentError:"Peman an pa t ka kòmanse. Eseye ankò nan yon ti moman.",
+  paymentPending:"Peman resevwa! N ap aktive abònman ou…",
+  adLabel:"Piblisite",
+  g:{"offStart": "Distans depi bout tiyo a rive nan mak 1 (si ou vle)", "threeStart": "Distans depi bout tiyo a rive nan mitan obstak la (si ou vle)", "fourStart": "Distans depi bout tiyo a rive nan bò obstak la (si ou vle)", "offNote": "Dyamèt tiyo a pa chanje kalkil yon ofsèt: se sèlman wotè a ak ang lan ki konte.", "mult": "Miltiplikatè", "calc": "Kalkil", "shrink": "Retresi (tiyo a vin pi kout de)", "between": "Ant 2 mak yo", "markN": "Mak {n} (depi bout la)", "markRel": "Mak {n} (depi mak 1)", "center": "Mak mitan an (depi bout la)", "side": "Depi mitan an rive nan chak mak", "fourShort": "Pa gen ase tiyo anvan obstak la: ogmante distans depi bout la.", "feetWord": "pye", "off1": "Kalkil: wotè {depth} × miltiplikatè {k} (pou {angle}°) = {dist}. Se distans ant 2 mak yo.", "off2a": "Mezire {start} depi bout tiyo a epi fè mak 1 tout otou tiyo a.", "off2b": "Fè mak 1 kote ofsèt la dwe kòmanse.", "off3": "Depi mak 1, mezire {dist} nan direksyon rès tiyo a epi fè mak 2{at}.", "off4": "Mete bender a sou tiyo a, flèch la egzakteman sou mak 1, kwochèt la vire bò bout tiyo a.", "off5": "Pye w byen apiye, pliye jiska {angle}° (mak {angle}° bender a). Pa plis.", "off6": "Retire bender a epi vire tiyo a yon mwatye tou (180°) sou li menm.", "off7": "Mete flèch la sou mak 2. Asire w tiyo a byen dwat nan bender a: premye pliyay la dwe egzakteman nan direksyon opoze, nan menm plan an (gade sou longè tiyo a), sinon ofsèt la ap tòde.", "off8": "Pliye nan lòt sans lan jiska {angle}°. De pati dwat tiyo a vin paralèl ankò.", "off9": "Verifye: atè, espas ant de pati dwat yo dwe fè {depth}. Tiyo a vin pi kout de {shrink}: si mezi final ou soti nan lòt bout la, ajoute {shrink}.", "kick1": "Kalkil: wotè {depth} × miltiplikatè {k} (pou {angle}°) = {dist}.", "kick2": "Mezire {dist} depi bout tiyo ki dwe leve a epi fè yon mak klè tout otou.", "kick3": "Mete bender a, flèch la egzakteman sou mak la, kwochèt la vire bò bout sa a.", "kick4": "Pye w byen apiye, pliye jiska {angle}°, pa plis.", "kick5": "Verifye: atè, bout tiyo a dwe leve {depth}. Yon sèl pliyay: pa bezwen dezyèm mak.", "three1": "Kalkil: wotè {h} × 2.5 = {dist} (depi mitan an rive nan chak mak). Retresi: {h} × 3/16 = {shrink}.", "three2a": "Mezire {center} depi bout tiyo a epi fè mak mitan an ({start} rive nan mitan obstak la + {shrink} retresi).", "three2b": "Fè mak mitan an kote tiyo a dwe pase anwo mitan obstak la. Si w ap mezire depi bout la, ajoute {shrink} retresi.", "three3": "Mezire {dist} chak bò mak mitan an epi fè mak 1 ak mak 3.", "three4": "Aliyen mak mitan an ak mak sele a (ti antay oswa gout) sou bender a — oswa ak flèch la si pa genyen — epi pliye a 45°.", "three5": "Vire tiyo a yon mwatye tou (180°), mete mak 1 sou flèch la, tiyo a byen dwat nan menm plan an, epi pliye a 22.5°.", "three6": "Vire tiyo a tèt an ba bout pou bout, mete mak 3 sou flèch la (menm plan an) epi pliye a 22.5°.", "three7": "Verifye: anwo pon an dwe nan wotè {h} epi de bout tiyo a aliyen.", "four1": "Kalkil: wotè {h} × 2 (30°) = {d} ant mak chak ofsèt. Lajè obstak la {w} = espas ant mak 2 ak mak 3. Retresi total: {shrink}.", "four2a": "Mezire depi bout tiyo a: mak 1 a {m1}, mak 2 a {m2} ({start} rive nan obstak la + {s1} retresi), mak 3 a {m3}, mak 4 a {m4}.", "four2b": "Fè mak 1, epi depi mak 1: mak 2 a {d}, mak 3 a {m3r}, mak 4 a {m4r}.", "four3": "Flèch sou mak 1, kwochèt vire bò bout tiyo a: pliye a 30°.", "four4": "Vire tiyo a yon mwatye tou (180°), flèch sou mak 2, tiyo a dwat nan menm plan an: pliye a 30°. Premye ofsèt la fini.", "four5": "Kenbe menm direksyon an, flèch sou mak 3: pliye a 30°.", "four6": "Vire tiyo a yon mwatye tou, flèch sou mak 4: pliye a 30°. Tiyo a desann epi kontinye dwat.", "four7": "Verifye: pati plat ant mak 2 ak mak 3 dwe pase {h} anwo, sou yon longè {w}, epi de bout yo dwe aliyen."},
+  calcBtn:"Kalkile",
+  legendMark:"mak sou tiyo a",
+  legendBend:"pwen pliyay",
+  upsellTitle:"BendMark Pro — 3 $/mwa",
+  upsellDesc:"Aksè san limit pou tout kalkil yo ak kòmand vokal. Peman an sekirite, ou ka anile nenpòt lè.",
+  adSlot:"espas piblisite",
+  comingSoon:" (byento)",
+  bendNames:{b2b:"Back to Back — de 90° do a do (U)",offset:"Ofsèt — kontounen yon obstak (2 pliyay)",bend90:"Pli 90° — pliyay a ang dwat",kick:"Kick — ti ajisteman (1 sèl pliyay)",three:"Three Point — pon ak 3 pliyay",four:"Four Point — pon ak 4 pliyay"},
+  vendorNames:{manual:"Kentrèz manyèl",hydraulic:"Kentrèz idwolik",oneshot:"One-shot",electric:"Kentrèz elektrik"},
+  fields:{
+    b2bStub:"Wotè premye 90° la (stub)", b2bDist:"Distans do a do (deyò rive deyò)",
+    offsetDepth:"Pwofondè obstak la",
+    offsetAngle:"Ang pliyay la",
+    bend90Length:"Longè final ou vle apre pliyay la",
+    bend90Hint:"Egzanp: tiyo 1\" (take-up 8\"). Pou yon 90 de 28\", aplikasyon an kalkile 28 − 8 = 20\": make 20\" depi bout la epi mete mak sa a sou flèch bender a.",
+    kickDepth:"Wotè desalaj la",
+    kickAngle:"Ang pliyay la",
+    threeHeight:"Wotè obstak ou dwe travèse a",
+    fourWidth:"Lajè obstak la",
+    fourHeight:"Wotè obstak la"
+  },
+  phPrefix:"egzanp:",
+  errors:{
+    b2bDims:"Antre wotè stub la ak distans do a do a.", b2bTooSmall:"Wotè stub la dwe pi gran pase take-up la ({tu}).",
+    offsetDepth:"Antre pwofondè obstak la.",
+    bend90Length:"Antre longè final ou vle a.",
+    bend90TooSmall:"Longè ou vle a dwe pi gwo pase take-up la ({tu}{U}).",
+    kickDepth:"Antre wotè desalaj la.",
+    threeHeight:"Antre wotè obstak la.",
+    fourDims:"Antre lajè ak wotè obstak la."
+  },
+  marks:{
+    b2bStub:"Wotè stub", b2bTakeup:"Take-up", b2bMark1:"Mak 1 (depi bout tiyo a)", b2bDist:"Mak 2 (depi do premye 90° la)",
+    offsetDepth:"Pwofondè ofsèt la", offsetAngle:"Ang 2 pliyay yo", pipeSize:"Dyamèt tiyo a", offsetDist:"Distans ant 2 mak yo",
+    bend90Size:"Dyamèt", bend90Takeup:"Take-up", bend90Length:"Longè final ou vle a", bend90Calc:"Kalkil", bend90Mark:"Mak pou fè (apati bout la)",
+    kickDepth:"Wotè desalaj la", kickAngle:"Ang", kickDist:"Distans apati bout tiyo a",
+    threeHeight:"Wotè obstak la", threeConst:"Konstant (fiks)", threeDist:"Distans ant sant lan ak chak mak",
+    fourWidth:"Lajè obstak la", fourHeight:"Wotè obstak la", fourGap:"Espas ant mak 1 ak 2 (anba)", fourOffset:"Desalaj vè mak 3 ak 4"
+  },
+  steps:{
+    b2b1:"Mezire {mark1} depi bout tiyo a epi fè mak 1 (stub {stub} mwens take-up {tu}).", b2b2:"Mete mak 1 sou flèch bender a epi pliye a 90°: se premye stub la.", b2b3:"Mezire {dist} depi do (deyò) premye 90° la, sou longè tiyo a, epi fè mak 2.", b2b4:"Vire bender a sou tiyo a, aliyen mak 2 ak zetwal la (mak do pliyay) epi pliye a 90°: de stub yo dwe pwente menm bò.", b2b5:"Verifye: distans deyò ant de stub yo dwe fè {dist}.",
+    offset1:"Fè premye mak la (flèch) kote ofsèt la dwe kòmanse.",
+    offset2:"Mezire {dist}{U} apati mak sa a, nan direksyon tiyo a kontinye, epi fè yon dezyèm mak.",
+    offset3:"Pliye {angle}° sou premye mak la, an direksyon opoze obstak la.",
+    offset4:"Pliye {angle}° sou dezyèm mak la, nan direksyon opoze premye pliyay la, pou tiyo a tounen paralèl ak liy orijinal li.",
+    bend90_1:"Kalkil: longè ou vle a {length} − take-up {tu} (tiyo {size}) = {mark}. Take-up la se longè pliyay la « manje », se pou sa nou retire l.",
+    bend90_2:"Mezire {mark} depi bout tiyo a epi fè yon mak klè tout otou tiyo a.",
+    bend90_3:"Mete tiyo a atè epi glise bender a sou li, ak kwochèt la vire bò kote bout ou te mezire a.",
+    bend90_4:"Aliyen mak la egzakteman ak flèch bender a — se la 90° la fòme.",
+    bend90_5:"Kenbe pye w byen apiye sou mach bender a epi rale manch lan yon sèl kou, san sakad.",
+    bend90_6:"Rete lè tiyo a rive 90°: verifye ak nivo boul la oswa mak 90° bender a. Pa depase l.",
+    bend90_7:"Verifye: depi atè rive nan bout tiyo a (do pliyay la) ou dwe jwenn {length}. Take-up {tu} a se pou bender manyèl EMT; si bender ou a montre yon lòt chif, sèvi ak chif sa a.",
+    kick1:"Mezire {dist}{U} apati bout tiyo a epi fè yon sèl mak.",
+    kick2:"Pliye {angle}° sou mak sa a, nan direksyon desalaj ou vle a.",
+    kick3:"Yon sèl pliyay — pa gen bezwen dezyèm mak pou yon kick.",
+    three1:"Make sant tiyo a — sa ap tèt la, pliye a 45°.",
+    three2:"Mezire {dist}{U} chak kote sant lan epi fè de mak.",
+    three3:"Pliye sant lan a 45°.",
+    three4:"Pliye chak mak sou kote a 22.5°, an direksyon opoze sant lan.",
+    four1:"Make tiyo a nan pwen 1 ak 2, ki {width}{U} apa (lajè egzat obstak la).",
+    four2:"Apati chak mak, mezire {offset}{U} vè deyò epi fè mak 3 ak 4.",
+    four3:"Pliye tout 4 mak yo a 30° chak, vè tèt plat la.",
+    four4:"Pòsyon ant mak 1 ak 2 la rete dwat — se tèt plat sa a ki pase pa anwo obstak la."
+  },
+  svg:{b2bA:"stub", b2bB:"do a do",markAt:"mak nan", width:"lajè obstak", realBend:"pliyay reyèl", theoretical:"ang teyorik", continues:"kontinye tou dwat"},
+  codeModalTitle:"Kòd kreyatè",
+  codeCancel:"Anile",
+  codeSubmit:"Konfime",
+  codeWrong:"Kòd la pa bon.",
+  adminTitle:"Panel kreyatè",
+  adminExit:"Soti",
+  adminNote:"Abòne reyèl (Supabase). Pri reyèl la chanje nan Stripe (Pwodwi).",
+  adminPriceTitle:"Abònman",
+  adminPriceLabel:"Pri chak mwa (yon fwa Stripe konekte, sa ap chanje vrè pri a)",
+  adminSavePrice:"Anrejistre",
+  adminPriceSaved:"Anrejistre lokalman.",
+  adminUsersTitle:"Itilizatè",
+  adminUsersEmpty:"Poko gen itilizatè — konekte Supabase pou wè ak jere kont yo (bannou, bay yon mwa gratis, elatriye).",
+  auth:{
+    loginTitle:"Konekte", signupTitle:"Kreye yon kont", forgotTitle:"Bliye modpas", resetTitle:"Nouvo modpas",
+    emailLabel:"Imèl", passwordLabel:"Modpas", confirmLabel:"Konfime modpas", newPasswordLabel:"Nouvo modpas",
+    loginBtn:"Konekte", signupBtn:"Kreye kont lan", forgotBtn:"Voye lyen an", resetBtn:"Chanje modpas",
+    toSignup:"Ou pa gen kont? Kreye youn", toLogin:"Ou gen kont deja? Konekte", toForgot:"Bliye modpas?", backToLogin:"Retounen nan koneksyon",
+    logout:"Dekonekte", changePassword:"Chanje modpas",
+    errInvalid:"Imèl oswa modpas pa kòrèk.", errMismatch:"Modpas yo pa menm.", errGeneric:"Gen yon erè ki fèt. Eseye ankò.",
+    signupSuccess:"Kont kreye! Tcheke imèl ou pou konfime, epi konekte.",
+    forgotSuccess:"Si imèl sa a egziste, yon lyen reyinisyalizasyon fèk voye.",
+    resetSuccess:"Modpas chanje avèk siksè.",
+    changeSuccess:"Modpas mete ajou.",
+    bannedTitle:"Kont sispann", bannedMsg:"Aksè ou nan BendMark sispann. Kontakte sipò si ou panse se yon erè.",
+    expiredTitle:"Abònman ekspire", expiredMsg:"Abònman ou fini. Reabòne pou 3 $ pa mwa pou kontinye.",
+    trialMsg:"Peryòd gratis aktif jiska",
+    launchTitle:"Sèlman 5 esè gratis",
+    launchMsg:"Ou gen dwa 5 kalkil gratis. Apre sa, BendMark koute 3 $ pa mwa. Yon sèl kont pou chak moun ak chak imèl.",
+    trialsLeft:"Esè gratis ki rete: {n} / 5",
+    subActive:"Abònman aktif jiska",
+    paywallTitle:"5 esè gratis ou yo fini",
+    paywallMsg:"Pou kontinye itilize BendMark, abòne pou 3 $ pa mwa. Peman an sekirite ak kat, li renouvle otomatikman chak mwa, ou ka anile nenpòt lè.",
+    errDisposable:"Nou pa aksepte imèl tanporè. Sèvi ak vrè imèl ou.", errEmailTaken:"Imèl sa a deja itilize. Yon sèl kont pou chak moun — konekte ak kont ou genyen deja a."
+  }
+}
+};
+
+var SUPABASE_URL = "https://ondjgyeohaaflgiizwzg.supabase.co";
+var SUPABASE_KEY = "sb_publishable_GRs6jYCzw3WrCwQnMgwjSQ_tRo23bsM";
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var authView = "login";
+var currentUser = null;
+var currentSub = null;
+
+var MASTER_CODE = "LOUp5687";
+var adminState = { price: 3 };
+var adminCode = "";
+var FREE_TRIALS = 5;
+var trialsLeft = 0;
+var calcShown = false;
+
+var DEVICE_ID = (function(){
+  try{
+    var id = localStorage.getItem("bm_device_id");
+    if(!id){
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+      localStorage.setItem("bm_device_id", id);
+    }
+    return id;
+  }catch(e){ return null; }
+})();
+
+var ADSTERRA_NATIVE = "https://pl29682873.effectivecpmnetwork.com/05a0c85f7f4edebcd0ebf4a2573318e8/invoke.js";
+var adsLoaded = false;
+function loadAds(){
+  if(adsLoaded) return;
+  adsLoaded = true;
+  var sc = document.createElement("script");
+  sc.async = true;
+  sc.setAttribute("data-cfasync", "false");
+  sc.src = ADSTERRA_NATIVE;
+  document.body.appendChild(sc);
+}
+
+async function startCheckout(btn){
+  if(btn) btn.disabled = true;
+  try{
+    var r = await sb.functions.invoke("bm-checkout", { body:{ action:"checkout", return_url: window.location.origin + window.location.pathname } });
+    if(r.error || !r.data || !r.data.url) throw new Error("no url");
+    window.location.href = r.data.url;
+  }catch(e){
+    alert(T().auth.paymentError);
+    if(btn) btn.disabled = false;
+  }
+}
+async function openPortal(btn){
+  if(btn) btn.disabled = true;
+  try{
+    var r = await sb.functions.invoke("bm-checkout", { body:{ action:"portal", return_url: window.location.origin + window.location.pathname } });
+    if(r.error || !r.data || !r.data.url) throw new Error("no url");
+    window.location.href = r.data.url;
+  }catch(e){
+    alert(T().auth.paymentError);
+    if(btn) btn.disabled = false;
+  }
+}
+
+function isCreator(){ return !!(currentSub && currentSub.is_admin); }
+function hasPaidAccess(){
+  if(isCreator()) return true;
+  return !!(currentSub && currentSub.paid_until && new Date(currentSub.paid_until) > new Date());
+}
+
+function updateTrialBar(){
+  var bar = document.getElementById("trialBar");
+  if(!bar || !currentSub) return;
+  var a = T().auth;
+  bar.classList.remove("paid","low");
+  if(isCreator()){
+    bar.textContent = T().adminUnlimited;
+    bar.classList.add("paid");
+  } else if(hasPaidAccess()){
+    bar.textContent = a.subActive + " " + new Date(currentSub.paid_until).toLocaleDateString();
+    bar.classList.add("paid");
+  } else {
+    bar.textContent = a.trialsLeft.replace("{n}", trialsLeft);
+    if(trialsLeft <= 1) bar.classList.add("low");
+  }
+  var ub = document.getElementById("upsellBtn");
+  if(ub){
+    var t = T();
+    ub.disabled = false;
+    if(isCreator()){ ub.style.display = "none"; }
+    else if(hasPaidAccess() && currentSub.has_stripe){ ub.textContent = t.manageSub; ub.onclick = function(){ openPortal(ub); }; ub.style.display = "block"; }
+    else if(hasPaidAccess()){ ub.style.display = "none"; }
+    else { ub.textContent = t.subscribeBtn; ub.onclick = function(){ startCheckout(ub); }; ub.style.display = "block"; }
+  }
+}
+
+function renderAuthScreen(){
+  var t = T();
+  var a = t.auth;
+  var notice = document.getElementById("authNotice");
+  if(notice){
+    notice.innerHTML = "<b>" + a.launchTitle + "</b>" + a.launchMsg;
+    notice.style.display = (authView === "reset") ? "none" : "block";
+  }
+  var box = document.getElementById("authBox");
+  if(authView === "login"){
+    box.innerHTML =
+      "<h2>" + a.loginTitle + "</h2>" +
+      "<div class=\"field\"><label>" + a.emailLabel + "</label><input class=\"numin\" type=\"email\" id=\"authEmail\"></div>" +
+      "<div class=\"field\"><label>" + a.passwordLabel + "</label><input class=\"numin\" type=\"password\" id=\"authPassword\"></div>" +
+      "<div class=\"auth-forgot\"><a id=\"toForgotLink\">" + a.toForgot + "</a></div>" +
+      "<div class=\"err\" id=\"authErr\"></div>" +
+      "<button class=\"calc-btn\" id=\"authSubmitBtn\">" + a.loginBtn + "</button>" +
+      "<div class=\"auth-switch\"><a id=\"toSignupLink\">" + a.toSignup + "</a></div>";
+    document.getElementById("authSubmitBtn").addEventListener("click", doLogin);
+    document.getElementById("toSignupLink").addEventListener("click", function(){ authView="signup"; renderAuthScreen(); });
+    document.getElementById("toForgotLink").addEventListener("click", function(){ authView="forgot"; renderAuthScreen(); });
+  } else if(authView === "signup"){
+    box.innerHTML =
+      "<h2>" + a.signupTitle + "</h2>" +
+      "<div class=\"field\"><label>" + a.emailLabel + "</label><input class=\"numin\" type=\"email\" id=\"authEmail\"></div>" +
+      "<div class=\"field\"><label>" + a.passwordLabel + "</label><input class=\"numin\" type=\"password\" id=\"authPassword\"></div>" +
+      "<div class=\"field\"><label>" + a.confirmLabel + "</label><input class=\"numin\" type=\"password\" id=\"authConfirm\"></div>" +
+      "<div class=\"err\" id=\"authErr\"></div>" +
+      "<div class=\"success-msg\" id=\"authSuccess\"></div>" +
+      "<button class=\"calc-btn\" id=\"authSubmitBtn\">" + a.signupBtn + "</button>" +
+      "<div class=\"auth-switch\"><a id=\"toLoginLink\">" + a.toLogin + "</a></div>";
+    document.getElementById("authSubmitBtn").addEventListener("click", doSignup);
+    document.getElementById("toLoginLink").addEventListener("click", function(){ authView="login"; renderAuthScreen(); });
+  } else if(authView === "forgot"){
+    box.innerHTML =
+      "<h2>" + a.forgotTitle + "</h2>" +
+      "<div class=\"field\"><label>" + a.emailLabel + "</label><input class=\"numin\" type=\"email\" id=\"authEmail\"></div>" +
+      "<div class=\"err\" id=\"authErr\"></div>" +
+      "<div class=\"success-msg\" id=\"authSuccess\"></div>" +
+      "<button class=\"calc-btn\" id=\"authSubmitBtn\">" + a.forgotBtn + "</button>" +
+      "<div class=\"auth-switch\"><a id=\"toLoginLink\">" + a.backToLogin + "</a></div>";
+    document.getElementById("authSubmitBtn").addEventListener("click", doForgotPassword);
+    document.getElementById("toLoginLink").addEventListener("click", function(){ authView="login"; renderAuthScreen(); });
+  } else if(authView === "reset"){
+    box.innerHTML =
+      "<h2>" + a.resetTitle + "</h2>" +
+      "<div class=\"field\"><label>" + a.newPasswordLabel + "</label><input class=\"numin\" type=\"password\" id=\"authNewPassword\"></div>" +
+      "<div class=\"err\" id=\"authErr\"></div>" +
+      "<div class=\"success-msg\" id=\"authSuccess\"></div>" +
+      "<button class=\"calc-btn\" id=\"authSubmitBtn\">" + a.resetBtn + "</button>";
+    document.getElementById("authSubmitBtn").addEventListener("click", doUpdatePassword);
+  }
+}
+
+function showAuthErr(msg){
+  var e = document.getElementById("authErr");
+  if(e){ e.textContent = msg; e.classList.add("show"); }
+}
+function showAuthSuccess(msg){
+  var s = document.getElementById("authSuccess");
+  if(s){ s.textContent = msg; s.classList.add("show"); }
+}
+
+async function doLogin(){
+  var t = T();
+  var email = document.getElementById("authEmail").value.trim();
+  var password = document.getElementById("authPassword").value;
+  var res = await sb.auth.signInWithPassword({ email: email, password: password });
+  if(res.error){ showAuthErr(t.auth.errInvalid); return; }
+  await afterAuthSuccess(res.data.user);
+}
+
+var DISPOSABLE = ["mailinator.com","guerrillamail.com","guerrillamail.net","sharklasers.com","10minutemail.com","10minutemail.net","tempmail.com","temp-mail.org","tempmail.net","yopmail.com","yopmail.fr","throwawaymail.com","getnada.com","nada.email","trashmail.com","maildrop.cc","dispostable.com","fakeinbox.com","mintemail.com","mohmal.com","emailondeck.com","tempr.email","discard.email","moakt.com","spamgourmet.com","mailnesia.com","mytemp.email","tempail.com","burnermail.io","inboxkitten.com","1secmail.com","1secmail.org","1secmail.net","emailfake.com","tmail.ws","tmpmail.org","tmpmail.net","minuteinbox.com","luxusmail.org","dropmail.me"];
+function isDisposable(email){
+  var d = (email.split("@")[1] || "").toLowerCase().trim();
+  return DISPOSABLE.some(function(x){ return d === x || d.slice(-(x.length + 1)) === "." + x; });
+}
+async function doSignup(){
+  var t = T();
+  var email = document.getElementById("authEmail").value.trim();
+  var password = document.getElementById("authPassword").value;
+  var confirm = document.getElementById("authConfirm").value;
+  if(password !== confirm){ showAuthErr(t.auth.errMismatch); return; }
+  if(isDisposable(email)){ showAuthErr(t.auth.errDisposable); return; }
+  var avail = await sb.rpc("bm_email_available", { p_email: email });
+  if(!avail.error && avail.data === false){ showAuthErr(t.auth.errEmailTaken); return; }
+  var res = await sb.auth.signUp({ email: email, password: password });
+  if(res.error){
+    var m = (res.error.message || "").toLowerCase();
+    showAuthErr(m.indexOf("already") !== -1 ? t.auth.errEmailTaken : (res.error.message || t.auth.errGeneric));
+    return;
+  }
+  // Supabase renvoie un faux utilisateur sans "identities" si le courriel existe déjà
+  if(res.data.user && res.data.user.identities && res.data.user.identities.length === 0){
+    showAuthErr(t.auth.errEmailTaken); return;
+  }
+  showAuthSuccess(t.auth.signupSuccess);
+}
+
+async function doForgotPassword(){
+  var t = T();
+  var email = document.getElementById("authEmail").value.trim();
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+  showAuthSuccess(t.auth.forgotSuccess);
+}
+
+async function doUpdatePassword(){
+  var t = T();
+  var pwd = document.getElementById("authNewPassword").value;
+  var res = await sb.auth.updateUser({ password: pwd });
+  if(res.error){ showAuthErr(t.auth.errGeneric); return; }
+  showAuthSuccess(currentUser ? t.auth.changeSuccess : t.auth.resetSuccess);
+  setTimeout(async function(){
+    if(currentUser){
+      document.getElementById("authScreen").style.display = "none";
+      document.getElementById("appScreen").style.display = "block";
+      return;
+    }
+    var sessionRes = await sb.auth.getSession();
+    if(sessionRes.data.session){ await afterAuthSuccess(sessionRes.data.session.user); }
+    else { authView = "login"; renderAuthScreen(); }
+  }, 1500);
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  currentSub = null;
+  authView = "login";
+  document.getElementById("appScreen").style.display = "none";
+  document.getElementById("blockedScreen").style.display = "none";
+  document.getElementById("authScreen").style.display = "block";
+  renderAuthScreen();
+}
+
+async function fetchOrCreateSubscription(user){
+  var res = await sb.rpc("bm_status", { p_device: DEVICE_ID });
+  if(res.error){
+    if((res.error.message || "").indexOf("email_taken") !== -1){ return { email_taken:true }; }
+    return null;
+  }
+  trialsLeft = res.data.trials_left;
+  return res.data;
+}
+
+var paidReturn = /[?&]bm_paid=1/.test(window.location.search);
+async function afterAuthSuccess(user){
+  currentUser = user;
+  currentSub = await fetchOrCreateSubscription(user);
+  if(paidReturn){
+    paidReturn = false;
+    try{ history.replaceState(null, "", window.location.pathname); }catch(e){}
+    if(currentSub && !currentSub.email_taken && !hasPaidAccess()){
+      document.getElementById("authScreen").style.display = "none";
+      showBlockedScreen("pending");
+      for(var i = 0; i < 15 && !hasPaidAccess(); i++){
+        await new Promise(function(res){ setTimeout(res, 2000); });
+        currentSub = await fetchOrCreateSubscription(user);
+      }
+    }
+  }
+  document.getElementById("authScreen").style.display = "none";
+  if(!currentSub){
+    showBlockedScreen("error");
+  } else if(currentSub.email_taken){
+    showBlockedScreen("emailTaken");
+  } else if(currentSub.banned){
+    showBlockedScreen("banned");
+  } else if(!hasPaidAccess() && trialsLeft <= 0){
+    showBlockedScreen("paywall");
+  } else {
+    document.getElementById("blockedScreen").style.display = "none";
+    document.getElementById("appScreen").style.display = "block";
+    document.getElementById("accEmail").textContent = currentUser.email;
+    fullRerender();
+    loadAds();
+  }
+}
+
+var blockedKind = "";
+function showBlockedScreen(kind){
+  var t = T();
+  var a = t.auth;
+  var el = document.getElementById("blockedScreen");
+  var title, msg;
+  if(kind === "banned"){ title = a.bannedTitle; msg = a.bannedMsg; }
+  else if(kind === "paywall"){ title = a.paywallTitle; msg = a.paywallMsg; }
+  else if(kind === "emailTaken"){ title = a.signupTitle; msg = a.errEmailTaken; }
+  else if(kind === "error"){ title = "BendMark"; msg = a.errGeneric; }
+  else if(kind === "pending"){ title = "BendMark"; msg = T().paymentPending; }
+  else { title = a.expiredTitle; msg = a.expiredMsg; }
+  blockedKind = kind;
+  document.getElementById("appScreen").style.display = "none";
+  var payBtn = (kind === "paywall" || kind === "expired") ? "<button class=\"pay-btn\" id=\"blockedPayBtn\">" + T().subscribeBtn + "</button>" : "";
+  el.innerHTML = "<h2>" + title + "</h2><p>" + msg + "</p>" + payBtn + "<div style=\"margin-top:18px\"><a id=\"blockedLogout\" style=\"color:var(--text-faint);font-size:12px;cursor:pointer;\">" + a.logout + "</a></div><a id=\"blockedCreator\" style=\"display:block;margin-top:30px;color:var(--text-faint);opacity:0.4;cursor:pointer;\">•</a>";
+  el.style.display = "block";
+  document.getElementById("blockedCreator").addEventListener("click", openCodeModal);
+  try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){}
+  if(payBtn){ document.getElementById("blockedPayBtn").addEventListener("click", function(){ startCheckout(this); }); }
+  document.getElementById("blockedLogout").addEventListener("click", doLogout);
+}
+
+async function initAuth(){
+  var hash = window.location.hash;
+  if(hash.indexOf("type=recovery") !== -1){
+    authView = "reset";
+    renderAuthScreen();
+    return;
+  }
+  var res = await sb.auth.getSession();
+  if(res.data.session){
+    await afterAuthSuccess(res.data.session.user);
+  } else {
+    authView = "login";
+    renderAuthScreen();
+  }
+}
+
+async function adminLoadUsers(){
+  var el = document.getElementById("adminUsersList");
+  el.innerHTML = "<div class=\"empty-state\">…</div>";
+  var res = await sb.rpc("bm_admin_list", { p_code: adminCode });
+  var t = T();
+  if(res.error || !res.data || res.data.length === 0){
+    el.innerHTML = "<div class=\"empty-state\">" + t.adminUsersEmpty + "</div>";
+    return;
+  }
+  el.innerHTML = res.data.map(function(u){
+    var paidUntil = u.paid_until ? new Date(u.paid_until).toLocaleDateString() : "—";
+    var statusTxt = u.banned ? "🔴 banni" : "🟢 actif";
+    statusTxt += " · essais " + (u.trials_used || 0) + "/" + FREE_TRIALS;
+    return "<div class=\"user-row\">" +
+      "<div class=\"u-email\">" + u.email + "</div>" +
+      "<div class=\"u-meta\">" + statusTxt + " · payé jusqu'au " + paidUntil + "</div>" +
+      "<div class=\"u-actions\">" +
+        "<button onclick=\"adminGrantMonth('" + u.user_id + "')\">+1 mois gratuit</button>" +
+        "<button class=\"" + (u.banned ? "" : "danger") + "\" onclick=\"adminToggleBan('" + u.user_id + "', " + (!u.banned) + ")\">" + (u.banned ? "Débannir" : "Bannir") + "</button>" +
+      "</div>" +
+    "</div>";
+  }).join("");
+}
+
+async function adminGrantMonth(userId){
+  await sb.rpc("bm_admin_grant_month", { p_code: adminCode, p_user: userId });
+  adminLoadUsers();
+}
+
+async function adminToggleBan(userId, banned){
+  await sb.rpc("bm_admin_set_ban", { p_code: adminCode, p_user: userId, p_banned: banned });
+  adminLoadUsers();
+}
+
+
+function applyAdminStaticText(){
+  var t = T();
+  document.getElementById("t_codeModalTitle").textContent = t.codeModalTitle;
+  document.getElementById("codeCancelBtn").textContent = t.codeCancel;
+  document.getElementById("codeSubmitBtn").textContent = t.codeSubmit;
+  document.getElementById("t_adminTitle").textContent = t.adminTitle;
+  document.getElementById("adminExitBtn").textContent = t.adminExit;
+  document.getElementById("t_adminNote").textContent = t.adminNote;
+  document.getElementById("t_adminPriceTitle").textContent = t.adminPriceTitle;
+  document.getElementById("t_adminPriceLabel").textContent = t.adminPriceLabel;
+  document.getElementById("adminSavePriceBtn").textContent = t.adminSavePrice;
+  document.getElementById("adminPriceSaved").textContent = t.adminPriceSaved;
+  document.getElementById("t_adminUsersTitle").textContent = t.adminUsersTitle;
+  var emptyEl = document.getElementById("t_adminUsersEmpty");
+  if(emptyEl) emptyEl.textContent = t.adminUsersEmpty;
+  document.getElementById("adminPriceInput").value = adminState.price;
+}
+
+function openCodeModal(){
+  document.getElementById("codeInput").value = "";
+  document.getElementById("codeErr").classList.remove("show");
+  document.getElementById("codeModal").classList.add("show");
+  document.getElementById("codeInput").focus();
+}
+function closeCodeModal(){
+  document.getElementById("codeModal").classList.remove("show");
+}
+function submitCode(){
+  var val = document.getElementById("codeInput").value;
+  if(val === MASTER_CODE){
+    adminCode = val;
+    closeCodeModal();
+    claimCreator();
+    document.getElementById("adminOverlay").classList.add("show");
+    adminLoadUsers();
+  } else {
+    var e = document.getElementById("codeErr");
+    e.textContent = T().codeWrong;
+    e.classList.add("show");
+  }
+}
+async function claimCreator(){
+  if(!currentUser) return;
+  var r = await sb.rpc("bm_admin_claim", { p_code: adminCode });
+  if(r.error) return;
+  currentSub = await fetchOrCreateSubscription(currentUser);
+  if(document.getElementById("blockedScreen").style.display !== "none" && isCreator()){
+    await afterAuthSuccess(currentUser);
+  } else {
+    updateTrialBar();
+  }
+}
+function exitAdminPanel(){
+  document.getElementById("adminOverlay").classList.remove("show");
+}
+
+var state = { bend:"offset", vendor:"manual", size:"1\"", lang:"fr", unit:"in" };
+
+function fillUnitSelect(el, current){
+  var t = T();
+  el.innerHTML = UNIT_ORDER.map(function(u){
+    var sel = (u===current) ? " selected" : "";
+    return "<option value=\"" + u + "\"" + sel + ">" + t.units[u] + " (" + UNIT_SYMBOL[u] + ")</option>";
+  }).join("");
+}
+
+function T(){ return DICT[state.lang]; }
+
+function fillSelect(el, keys, current, nameMap, enabledMap){
+  el.innerHTML = keys.map(function(k){
+    var dis = (enabledMap && enabledMap[k]===false) ? " disabled" : "";
+    var sel = (String(k)===String(current)) ? " selected" : "";
+    var suffix = (enabledMap && enabledMap[k]===false) ? T().comingSoon : "";
+    return "<option value=\"" + k + "\"" + sel + dis + ">" + nameMap[k] + suffix + "</option>";
+  }).join("");
+}
+
+function fillSizeSelect(el, current){
+  el.innerHTML = TAKEUP.map(function(t){
+    var sel = (t.size===current) ? " selected" : "";
+    return "<option value=\"" + t.size.replace(/"/g, "&quot;") + "\"" + sel + ">" + t.size + "</option>";
+  }).join("");
+}
+
+var VENDOR_ENABLED = {manual:true, hydraulic:false, oneshot:false, electric:false};
+
+function applyStaticText(){
+  var t = T();
+  document.getElementById("t_bendTypeTitle").textContent = t.bendTypeTitle;
+  document.getElementById("t_pipeBenderTitle").textContent = t.pipeBenderTitle;
+  document.getElementById("t_detailsTitle").textContent = t.detailsTitle;
+  document.getElementById("t_resultTitle").textContent = t.resultTitle;
+  document.getElementById("t_unitLabel").textContent = t.unitLabel;
+  document.getElementById("t_pipeSizeLabel").textContent = t.pipeSizeLabel;
+  document.getElementById("t_benderLabel").textContent = t.benderLabel;
+  document.getElementById("calcBtn").textContent = t.calcBtn;
+  document.getElementById("t_legendMark").textContent = t.legendMark;
+  document.getElementById("t_legendBend").textContent = t.legendBend;
+  document.getElementById("t_upsellTitle").textContent = t.upsellTitle;
+  document.getElementById("t_upsellDesc").textContent = t.upsellDesc;
+  document.getElementById("t_adSlot").textContent = t.adLabel;
+
+  document.body.classList.toggle("ar", state.lang==="ar");
+  document.documentElement.setAttribute("dir", state.lang==="ar" ? "rtl" : "ltr");
+  document.documentElement.setAttribute("lang", state.lang);
+  document.getElementById("accChangePwdLink").textContent = t.auth.changePassword;
+  document.getElementById("accLogoutLink").textContent = t.auth.logout;
+}
+
+var selectorsBound = false;
+function initSelectors(){
+  var t = T();
+  fillSelect(document.getElementById("bendSelect"), BEND_ORDER, state.bend, t.bendNames, null);
+  fillSelect(document.getElementById("vendorSelect"), VENDOR_ORDER, state.vendor, t.vendorNames, VENDOR_ENABLED);
+  fillSizeSelect(document.getElementById("sizeSelect"), state.size);
+  fillUnitSelect(document.getElementById("unitSelect"), state.unit);
+  if(selectorsBound){ document.getElementById("langSelect").value = state.lang; return; }
+  selectorsBound = true;
+  document.getElementById("unitSelect").addEventListener("change", function(e){
+    state.unit = e.target.value;
+    renderInputs();
+    hideResults();
+  });
+
+  document.getElementById("bendSelect").addEventListener("change", function(e){
+    state.bend = e.target.value;
+    renderInputs();
+    hideResults();
+  });
+  document.getElementById("vendorSelect").addEventListener("change", function(e){
+    state.vendor = e.target.value;
+  });
+  document.getElementById("sizeSelect").addEventListener("change", function(e){
+    state.size = e.target.value;
+  });
+  document.getElementById("langSelect").addEventListener("change", function(e){
+    state.lang = e.target.value;
+    fullRerender();
+    if(document.getElementById("authScreen").style.display !== "none"){ renderAuthScreen(); }
+    if(document.getElementById("blockedScreen").style.display !== "none" && currentSub){
+      showBlockedScreen(blockedKind || "expired");
+    }
+  });
+  document.getElementById("langSelect").value = state.lang;
+}
+
+function fullRerender(){
+  applyStaticText();
+  applyAdminStaticText();
+  initSelectors();
+  renderInputs();
+  hideResults();
+  updateTrialBar();
+  renderVoice();
+}
+
+function angleOptions(currentAngle){
+  return CONSTANTS_OFFSET.map(function(c){
+    var sel = c.angle === currentAngle ? " selected" : "";
+    return "<option value=\"" + c.angle + "\"" + sel + ">" + c.angle + "°</option>";
+  }).join("");
+}
+
+function unitLabel(base){
+  return base + " (" + UNIT_SYMBOL[state.unit] + ")";
+}
+function scalePh(inchesVal){
+  var v = inchesVal * UNIT_FACTOR[state.unit];
+  if(state.unit==="in") return v.toString();
+  if(state.unit==="ft" || state.unit==="m") return Math.round(v * 100) / 100;
+  return Math.round(v * 10) / 10;
+}
+// longueur formatée ; en pieds, on ajoute l'équivalent en pouces
+function L(v){
+  var x = (Math.round(parseFloat(v) * 100) / 100).toFixed(2) + UNIT_SYMBOL[state.unit];
+  if(state.unit === "ft") x += " (" + (parseFloat(v) * 12).toFixed(2) + "\")";
+  return x;
+}
+
+function renderInputs(){
+  var t = T();
+  var el = document.getElementById("inputArea");
+  if(state.bend === "offset"){
+    el.innerHTML =
+      "<div class=\"field\"><label>" + unitLabel(t.fields.offsetDepth) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_depth\" placeholder=\"" + t.phPrefix + " " + scalePh(4) + "\" step=\"any\"></div>" +
+      "<div class=\"field\"><label>" + t.fields.offsetAngle + "</label>" +
+      "<select class=\"numin\" id=\"in_angle\">" + angleOptions(30) + "</select></div>" +
+      "<div class=\"field\"><label>" + unitLabel(t.g.offStart) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_start\" placeholder=\"" + t.phPrefix + " " + scalePh(12) + "\" step=\"any\"></div>" +
+      "<div class=\"hint\">" + t.g.offNote + "</div>";
+  } else if(state.bend === "bend90"){
+    el.innerHTML =
+      "<div class=\"field\"><label>" + unitLabel(t.fields.bend90Length) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_length\" placeholder=\"" + t.phPrefix + " " + scalePh(20) + "\" step=\"any\"></div>" +
+      "<div class=\"hint\">" + t.fields.bend90Hint + "</div>";
+  } else if(state.bend === "b2b"){
+    el.innerHTML =
+      "<div class=\"field\"><label>" + unitLabel(t.fields.b2bStub) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_stub\" placeholder=\"" + t.phPrefix + " " + scalePh(10) + "\" step=\"any\"></div>" +
+      "<div class=\"field\"><label>" + unitLabel(t.fields.b2bDist) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_b2b\" placeholder=\"" + t.phPrefix + " " + scalePh(30) + "\" step=\"any\"></div>" +
+      "<div class=\"hint\">" + t.fields.bend90Hint + "</div>";
+  } else if(state.bend === "kick"){
+    el.innerHTML =
+      "<div class=\"field\"><label>" + unitLabel(t.fields.kickDepth) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_depth\" placeholder=\"" + t.phPrefix + " " + scalePh(2) + "\" step=\"any\"></div>" +
+      "<div class=\"field\"><label>" + t.fields.kickAngle + "</label>" +
+      "<select class=\"numin\" id=\"in_angle\">" + angleOptions(30) + "</select></div>" +
+      "<div class=\"hint\">" + t.g.offNote + "</div>";
+  } else if(state.bend === "three"){
+    el.innerHTML =
+      "<div class=\"field\"><label>" + unitLabel(t.fields.threeHeight) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_height\" placeholder=\"" + t.phPrefix + " " + scalePh(3) + "\" step=\"any\"></div>" +
+      "<div class=\"field\"><label>" + unitLabel(t.g.threeStart) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_start\" placeholder=\"" + t.phPrefix + " " + scalePh(24) + "\" step=\"any\"></div>";
+  } else if(state.bend === "four"){
+    el.innerHTML =
+      "<div class=\"field\"><label>" + unitLabel(t.fields.fourWidth) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_width\" placeholder=\"" + t.phPrefix + " " + scalePh(6) + "\" step=\"any\"></div>" +
+      "<div class=\"field\"><label>" + unitLabel(t.fields.fourHeight) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_height\" placeholder=\"" + t.phPrefix + " " + scalePh(3) + "\" step=\"any\"></div>" +
+      "<div class=\"field\"><label>" + unitLabel(t.g.fourStart) + "</label>" +
+      "<input class=\"numin\" type=\"number\" id=\"in_start\" placeholder=\"" + t.phPrefix + " " + scalePh(24) + "\" step=\"any\"></div>";
+  }
+}
+
+function fmt(str, vars){
+  return str.replace(/\{(\w+)\}/g, function(_, k){
+    if(k === "U" && vars[k] === undefined) return UNIT_SYMBOL[state.unit];
+    return vars[k];
+  });
+}
+function showErr(msg){
+  var b = document.getElementById("errBox");
+  b.textContent = msg;
+  b.classList.add("show");
+}
+function clearErr(){
+  var b = document.getElementById("errBox");
+  b.classList.remove("show");
+  b.textContent = "";
+}
+function hideResults(){
+  document.getElementById("resultsSection").classList.remove("show");
+}
+
+function svgWrap(inner, h){
+  return "<svg width=\"100%\" viewBox=\"0 0 380 " + h + "\" xmlns=\"http://www.w3.org/2000/svg\">" +
+    "<defs><marker id=\"ah\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\">" +
+    "<path d=\"M2 1L8 5L2 9\" fill=\"none\" stroke=\"#9CA3A8\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>" +
+    "</marker></defs>" + inner + "</svg>";
+}
+function pipePath(d){ return "<path d=\"" + d + "\" fill=\"none\" stroke=\"#4E9BE8\" stroke-width=\"6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"; }
+function dashedPath(d){ return "<path d=\"" + d + "\" fill=\"none\" stroke=\"#656C71\" stroke-width=\"1.5\" stroke-dasharray=\"4,4\"/>"; }
+function mrk(x,y){ return "<circle cx=\"" + x + "\" cy=\"" + y + "\" r=\"5\" fill=\"#E2574C\"/>"; }
+function lbl(x,y,t,size,color){ return "<text x=\"" + x + "\" y=\"" + y + "\" text-anchor=\"middle\" font-family=\"IBM Plex Mono, monospace\" font-size=\"" + (size||12) + "\" fill=\"" + (color||"#ECEAE3") + "\">" + t + "</text>"; }
+function lblDim(x,y,t){ return "<text x=\"" + x + "\" y=\"" + y + "\" text-anchor=\"middle\" font-family=\"IBM Plex Mono, monospace\" font-size=\"12\" fill=\"#F2A93B\">" + t + "</text>"; }
+function dashV(x,y1,y2){ return "<line x1=\"" + x + "\" y1=\"" + y1 + "\" x2=\"" + x + "\" y2=\"" + y2 + "\" stroke=\"#656C71\" stroke-width=\"0.5\" stroke-dasharray=\"3,3\"/>"; }
+function arrowH(x1,x2,y){ return "<line x1=\"" + x1 + "\" y1=\"" + y + "\" x2=\"" + x2 + "\" y2=\"" + y + "\" stroke=\"#656C71\" stroke-width=\"1\" marker-end=\"url(#ah)\"/>"; }
+function bigArrow(x1,y1,x2,y2,color){ return "<line x1=\"" + x1 + "\" y1=\"" + y1 + "\" x2=\"" + x2 + "\" y2=\"" + y2 + "\" stroke=\"" + (color||"#F2A93B") + "\" stroke-width=\"1.5\" marker-end=\"url(#ah)\"/>"; }
+
+function calc(){
+  clearErr();
+  var t = T();
+  var U = UNIT_SYMBOL[state.unit];
+  if(state.bend === "offset"){
+    var depth = parseFloat(document.getElementById("in_depth").value);
+    var angle = parseFloat(document.getElementById("in_angle").value);
+    var ostart = parseFloat(document.getElementById("in_start").value);
+    if(!depth || depth<=0){ showErr(t.errors.offsetDepth); return; }
+    var ad = angleData(angle);
+    var dist = depth * ad.k;
+    var oshrink = depth * ad.sh;
+    var hasStart = ostart > 0;
+    var omarks = [
+      {label:t.marks.offsetDepth, val: L(depth)},
+      {label:t.marks.offsetAngle, val: angle + "°"},
+      {label:t.g.mult, val: String(ad.k)},
+      {label:t.g.calc, val: depth + " × " + ad.k + " = " + L(dist)},
+      {label:t.g.between, val: L(dist)}
+    ];
+    if(hasStart){
+      omarks.push({label:fmt(t.g.markN,{n:1}), val: L(ostart)});
+      omarks.push({label:fmt(t.g.markN,{n:2}), val: L(ostart + dist)});
+    }
+    omarks.push({label:t.g.shrink, val: L(oshrink)});
+    var ov = {depth:L(depth), k:ad.k, angle:angle, dist:L(dist), start:L(ostart), shrink:L(oshrink),
+              at: hasStart ? " (" + L(ostart + dist) + ")" : ""};
+    showResults({
+      marks: omarks,
+      steps: [
+        fmt(t.g.off1, ov), fmt(hasStart ? t.g.off2a : t.g.off2b, ov), fmt(t.g.off3, ov), fmt(t.g.off4, ov),
+        fmt(t.g.off5, ov), fmt(t.g.off6, ov), fmt(t.g.off7, ov), fmt(t.g.off8, ov), fmt(t.g.off9, ov)
+      ],
+      diagram: svgWrap(
+        pipePath("M20,170 L120,170 L200,120 L360,120") +
+        mrk(120,170) + mrk(200,120) +
+        lbl(120,158,"1",12,"#E2574C") + lbl(212,112,"2",12,"#E2574C") +
+        lbl(140,195, angle + "°") +
+        lbl(190,100, angle + "°") +
+        lbl(290,108, t.svg.continues, 11, "#656C71") +
+        "<line x1=\"350\" y1=\"124\" x2=\"350\" y2=\"166\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        lblDim(350,186, L(depth)) +
+        dashV(120,170,215) + dashV(200,120,215) +
+        "<line x1=\"120\" y1=\"215\" x2=\"200\" y2=\"215\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        lblDim(160,235, L(dist)) +
+        (hasStart ? dashV(20,170,215) + "<line x1=\"22\" y1=\"205\" x2=\"118\" y2=\"205\" stroke=\"#656C71\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" + lbl(70,198, L(ostart), 10, "#9CA3A8") : "")
+      , 250)
+    });
+  }
+  if(state.bend === "bend90"){
+    var length = parseFloat(document.getElementById("in_length").value);
+    if(!length || length<=0){ showErr(t.errors.bend90Length); return; }
+    var tuBase = TAKEUP.filter(function(x){return x.size===state.size;})[0].v;
+    var tu = Math.round(tuBase * UNIT_FACTOR[state.unit] * 100) / 100;
+    if(length <= tu){ showErr(fmt(t.errors.bend90TooSmall,{tu:tu})); return; }
+    var markPos = (length - tuBase * UNIT_FACTOR[state.unit]).toFixed(2);
+    showResults({
+      marks:[
+        {label:t.marks.bend90Size, val: state.size},
+        {label:t.marks.bend90Takeup, val: tu.toFixed(2) + U},
+        {label:t.marks.bend90Length, val: length + U},
+        {label:t.marks.bend90Calc, val: length + " − " + tu + " = " + markPos + U},
+        {label:t.marks.bend90Mark, val: L(markPos)}
+      ],
+      steps:(function(){
+        var v = {length:length + U, tu:tu + U, mark:markPos + U, size:state.size};
+        return [1,2,3,4,5,6,7].map(function(n){ return fmt(t.steps["bend90_" + n], v); });
+      })(),
+      diagram: svgWrap(
+        pipePath("M40,180 L170,180 A60,60 0 0,1 230,120 L230,60") +
+        dashedPath("M170,180 L170,120 L230,120") +
+        "<path d=\"M170,128 L178,128 L178,120\" fill=\"none\" stroke=\"#656C71\" stroke-width=\"1.5\"/>" +
+        mrk(170,180) +
+        lbl(150,105,"90°",13,"#9CA3A8") +
+        lbl(130,205, t.svg.markAt + " " + markPos + U) +
+        arrowH(40,215,190)
+      , 230)
+    });
+  }
+  if(state.bend === "b2b"){
+    var stub = parseFloat(document.getElementById("in_stub").value);
+    var bdist = parseFloat(document.getElementById("in_b2b").value);
+    if(!stub || stub<=0 || !bdist || bdist<=0){ showErr(t.errors.b2bDims); return; }
+    var btuBase = TAKEUP.filter(function(x){return x.size===state.size;})[0].v;
+    var btu = Math.round(btuBase * UNIT_FACTOR[state.unit] * 100) / 100;
+    if(stub <= btu){ showErr(fmt(t.errors.b2bTooSmall,{tu:btu + U})); return; }
+    var mark1 = (stub - btuBase * UNIT_FACTOR[state.unit]).toFixed(2);
+    showResults({
+      marks:[
+        {label:t.marks.pipeSize, val: state.size},
+        {label:t.marks.b2bStub, val: stub + U},
+        {label:t.marks.b2bTakeup, val: btu.toFixed(2) + U},
+        {label:t.marks.b2bMark1, val: L(mark1)},
+        {label:t.marks.b2bDist, val: bdist + U}
+      ],
+      steps:[
+        fmt(t.steps.b2b1,{mark1:mark1 + U, stub:stub + U, tu:btu + U}),
+        t.steps.b2b2,
+        fmt(t.steps.b2b3,{dist:bdist + U}),
+        t.steps.b2b4,
+        fmt(t.steps.b2b5,{dist:bdist + U})
+      ],
+      diagram: svgWrap(
+        pipePath("M80,40 L80,140 A45,45 0 0,0 125,185 L255,185 A45,45 0 0,0 300,140 L300,40") +
+        mrk(80,140) + mrk(300,185) +
+        lbl(80,30, t.svg.b2bA, 11, "#9CA3A8") + lbl(300,30, t.svg.b2bA, 11, "#9CA3A8") +
+        lbl(118,138, "1", 12, "#E2574C") + lbl(318,180, "2", 12, "#E2574C") +
+        lbl(190,165, "90°   90°", 12, "#9CA3A8") +
+        "<line x1=\"45\" y1=\"40\" x2=\"45\" y2=\"188\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        "<text x=\"38\" y=\"118\" text-anchor=\"middle\" font-family=\"IBM Plex Mono, monospace\" font-size=\"12\" fill=\"#F2A93B\" transform=\"rotate(-90 38 118)\">" + stub + U + "</text>" +
+        dashV(77,188,222) + dashV(303,188,222) +
+        "<line x1=\"77\" y1=\"215\" x2=\"303\" y2=\"215\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        lblDim(190,235, t.svg.b2bB + " " + bdist + U)
+      , 245)
+    });
+  }
+  if(state.bend === "kick"){
+    var kdepth = parseFloat(document.getElementById("in_depth").value);
+    var kangle = parseFloat(document.getElementById("in_angle").value);
+    if(!kdepth || kdepth<=0){ showErr(t.errors.kickDepth); return; }
+    var kad = angleData(kangle);
+    var kdist = kdepth * kad.k;
+    var kv = {depth:L(kdepth), k:kad.k, angle:kangle, dist:L(kdist)};
+    showResults({
+      marks:[
+        {label:t.marks.kickDepth, val: L(kdepth)},
+        {label:t.marks.kickAngle, val: kangle + "°"},
+        {label:t.g.mult, val: String(kad.k)},
+        {label:t.g.calc, val: kdepth + " × " + kad.k + " = " + L(kdist)},
+        {label:t.marks.kickDist, val: L(kdist)}
+      ],
+      steps:[fmt(t.g.kick1,kv), fmt(t.g.kick2,kv), fmt(t.g.kick3,kv), fmt(t.g.kick4,kv), fmt(t.g.kick5,kv)],
+      diagram: svgWrap(
+        pipePath("M40,170 L200,170 L300,110") +
+        mrk(200,170) +
+        lbl(232,190, kangle + "°") +
+        dashV(300,110,215) + dashV(200,170,215) +
+        "<line x1=\"200\" y1=\"208\" x2=\"300\" y2=\"208\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        lblDim(250,228, L(kdist)) +
+        "<line x1=\"330\" y1=\"112\" x2=\"330\" y2=\"168\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        lblDim(345,145, L(kdepth))
+      , 240)
+    });
+  }
+  if(state.bend === "three"){
+    var height = parseFloat(document.getElementById("in_height").value);
+    var tstart = parseFloat(document.getElementById("in_start").value);
+    if(!height || height<=0){ showErr(t.errors.threeHeight); return; }
+    var tdist = height * 2.5;
+    var tshrink = height * 3/16;
+    var tHas = tstart > 0;
+    var tcenter = tstart + tshrink;
+    var tmarks = [
+      {label:t.marks.threeHeight, val: L(height)},
+      {label:t.g.calc, val: height + " × 2.5 = " + L(tdist)},
+      {label:t.g.side, val: L(tdist)},
+      {label:t.g.shrink, val: L(tshrink)}
+    ];
+    if(tHas){
+      tmarks.push({label:fmt(t.g.markN,{n:1}), val: L(tcenter - tdist)});
+      tmarks.push({label:t.g.center, val: L(tcenter)});
+      tmarks.push({label:fmt(t.g.markN,{n:3}), val: L(tcenter + tdist)});
+    }
+    if(tHas && tcenter - tdist <= 0){ showErr(t.g.fourShort); return; }
+    var tv = {h:L(height), dist:L(tdist), shrink:L(tshrink), center:L(tcenter), start:L(tstart)};
+    showResults({
+      marks: tmarks,
+      steps:[fmt(t.g.three1,tv), fmt(tHas ? t.g.three2a : t.g.three2b, tv), fmt(t.g.three3,tv), fmt(t.g.three4,tv), fmt(t.g.three5,tv), fmt(t.g.three6,tv), fmt(t.g.three7,tv)],
+      diagram: svgWrap(
+        pipePath("M30,220 L140,220 L190,170 L240,220 L350,220") +
+        mrk(140,220) + mrk(190,170) + mrk(240,220) +
+        lbl(140,208,"1",12,"#E2574C") + lbl(240,208,"3",12,"#E2574C") +
+        lbl(190,150,"45°",14) +
+        lbl(105,238,"22.5°") +
+        lbl(275,238,"22.5°") +
+        dashV(190,170,245) +
+        arrowH(140,186,245) + arrowH(240,194,245) +
+        lblDim(150,262, L(tdist)) + lblDim(235,262, L(tdist))
+      , 280)
+    });
+  }
+  if(state.bend === "four"){
+    var width = parseFloat(document.getElementById("in_width").value);
+    var fheight = parseFloat(document.getElementById("in_height").value);
+    var fstart = parseFloat(document.getElementById("in_start").value);
+    if(!width || width<=0 || !fheight || fheight<=0){ showErr(t.errors.fourDims); return; }
+    var fd = fheight * 2;
+    var s1 = fheight * 0.25;
+    var fHas = fstart > 0;
+    var m2 = fstart + s1, m1 = m2 - fd, m3 = m2 + width, m4 = m3 + fd;
+    if(fHas && m1 <= 0){ showErr(t.g.fourShort); return; }
+    var fmarks = [
+      {label:t.marks.fourWidth, val: L(width)},
+      {label:t.marks.fourHeight, val: L(fheight)},
+      {label:t.g.calc, val: fheight + " × 2 = " + L(fd)},
+      {label:t.g.shrink, val: L(s1 * 2)}
+    ];
+    if(fHas){
+      [m1,m2,m3,m4].forEach(function(v,i){ fmarks.push({label:fmt(t.g.markN,{n:i+1}), val: L(v)}); });
+    } else {
+      fmarks.push({label:fmt(t.g.markRel,{n:2}), val: L(fd)});
+      fmarks.push({label:fmt(t.g.markRel,{n:3}), val: L(fd + width)});
+      fmarks.push({label:fmt(t.g.markRel,{n:4}), val: L(fd * 2 + width)});
+    }
+    var fv = {h:L(fheight), w:L(width), d:L(fd), shrink:L(s1*2), s1:L(s1), start:L(fstart),
+              m1:L(m1), m2:L(m2), m3:L(m3), m4:L(m4), m3r:L(fd + width), m4r:L(fd*2 + width)};
+    showResults({
+      marks: fmarks,
+      steps:[fmt(t.g.four1,fv), fmt(fHas ? t.g.four2a : t.g.four2b, fv), fmt(t.g.four3,fv), fmt(t.g.four4,fv), fmt(t.g.four5,fv), fmt(t.g.four6,fv), fmt(t.g.four7,fv)],
+      diagram: svgWrap(
+        pipePath("M20,220 L110,220 L150,180 L230,180 L270,220 L360,220") +
+        mrk(110,220) + mrk(150,180) + mrk(230,180) + mrk(270,220) +
+        lbl(110,240,"1",12,"#E2574C") + lbl(150,168,"2",12,"#E2574C") + lbl(230,168,"3",12,"#E2574C") + lbl(270,240,"4",12,"#E2574C") +
+        lbl(80,212,"30°",11,"#9CA3A8") + lbl(300,212,"30°",11,"#9CA3A8") +
+        lbl(190,130, t.svg.width + " " + L(width), 12, "#F2A93B") +
+        dashV(150,140,180) + dashV(230,140,180) +
+        "<line x1=\"150\" y1=\"143\" x2=\"230\" y2=\"143\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        "<line x1=\"345\" y1=\"182\" x2=\"345\" y2=\"216\" stroke=\"#F2A93B\" stroke-width=\"1\" marker-start=\"url(#ah)\" marker-end=\"url(#ah)\"/>" +
+        lblDim(345,250, L(fheight))
+      , 260)
+    });
+  }
+}
+
+function showResults(r){
+  calcShown = true;
+  if(voiceSpeakNext){ voiceSpeakNext = false; speakResults(r); }
+  document.getElementById("diagramBox").innerHTML = r.diagram;
+  document.getElementById("markList").innerHTML = r.marks.map(function(m){
+    return "<div class=\"mark-row\"><span class=\"m-label\">" + m.label + "</span><span class=\"m-val\">" + m.val + "</span></div>";
+  }).join("");
+  document.getElementById("stepsList").innerHTML = r.steps.map(function(s){
+    return "<li>" + s + "</li>";
+  }).join("");
+  document.getElementById("resultsSection").classList.add("show");
+  document.getElementById("resultsSection").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// ================= COMMANDE VOCALE =================
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+var VOICE_LANG = { fr:"fr-FR", en:"en-US", es:"es-ES", ar:"ar-SA", ht:"fr-FR" };
+var recog = null, listening = false, lastSpeech = "", voiceSpeakNext = false;
+
+function setVoiceStatus(msg){ var el = document.getElementById("voiceStatus"); if(el) el.textContent = msg; }
+
+function renderVoice(){
+  var t = T();
+  if(!document.getElementById("voiceBox")) return;
+  document.getElementById("t_voiceTitle").textContent = t.voiceTitle;
+  document.getElementById("voiceHint").textContent = t.voiceHint;
+  var btn = document.getElementById("voiceBtn");
+  if(!SR){ btn.style.display = "none"; setVoiceStatus(t.voiceUnsupported); }
+  else { btn.textContent = listening ? t.voiceStop : t.voiceBtn; btn.classList.toggle("listening", listening); }
+  var rb = document.getElementById("voiceReplayBtn");
+  rb.textContent = t.voiceReplay;
+  rb.style.display = lastSpeech ? "block" : "none";
+}
+
+function toggleVoice(){
+  if(!SR) return;
+  if(listening && recog){ recog.stop(); return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  recog = new SR();
+  recog.lang = VOICE_LANG[state.lang] || "fr-FR";
+  recog.interimResults = false;
+  recog.maxAlternatives = 3;
+  recog.onstart = function(){ listening = true; renderVoice(); setVoiceStatus(T().voiceListening); };
+  recog.onend = function(){ listening = false; renderVoice(); };
+  recog.onerror = function(e){
+    listening = false; renderVoice();
+    setVoiceStatus((e.error === "not-allowed" || e.error === "service-not-allowed") ? T().voiceMicDenied : T().voiceNotUnderstood);
+  };
+  recog.onresult = function(e){
+    var alts = [];
+    for(var i = 0; i < e.results[0].length; i++) alts.push(e.results[0][i].transcript);
+    handleVoice(alts);
+  };
+  try{ recog.start(); }catch(err){}
+}
+
+var NUM_WORDS = [
+  ["quatre vingt dix","90"],["quatre-vingt-dix","90"],["katreven dis","90"],["quarante cinq","45"],["quarante-cinq","45"],["forty five","45"],["forty-five","45"],["cuarenta y cinco","45"],["karannsenk","45"],
+  ["vingt deux","22"],["vingt-deux","22"],["twenty two","22"],["twenty-two","22"],["veintidos","22"],["vennde","22"],
+  ["soixante","60"],["sixty","60"],["sesenta","60"],["swasant","60"],["trente","30"],["thirty","30"],["treinta","30"],["trant","30"],
+  ["vingt","20"],["twenty","20"],["veinte","20"],["ven","20"],["ninety","90"],["noventa","90"],["dix","10"],["ten","10"],["diez","10"],["dis","10"],
+  ["douze","12"],["twelve","12"],["doce","12"],["onze","11"],["eleven","11"],["once","11"],["neuf","9"],["nine","9"],["nueve","9"],["nef","9"],
+  ["huit","8"],["eight","8"],["ocho","8"],["uit","8"],["sept","7"],["seven","7"],["siete","7"],["six","6"],["seis","6"],["sis","6"],
+  ["cinq","5"],["five","5"],["cinco","5"],["senk","5"],["quatre","4"],["four","4"],["cuatro","4"],["kat","4"],
+  ["trois","3"],["three","3"],["tres","3"],["twa","3"],["deux","2"],["two","2"],["dos","2"]
+];
+
+function normVoice(s){
+  s = (s || "").normalize("NFC").toLowerCase();
+  s = s.replace(/[٠-٩]/g, function(d){ return String("٠١٢٣٤٥٦٧٨٩".indexOf(d)); });
+  s = s.replace(/[أإآ]/g, "ا").replace(/ة/g, "ه");
+  s = s.normalize("NFD").replace(/[\u0300-\u036f\u064B-\u065F]/g, "");
+  s = s.replace(/[-–]/g, " ").replace(/\s+/g, " ");
+  // mots-clés des types AVANT conversion des nombres (pour garder "three point", "dos a dos"...)
+  s = s.replace(/back\s*to\s*back|dos\s*a\s*dos|espalda\s*(?:con|a)\s*espalda|do\s*a\s*do|ظهر\s*ل\s*ظهر|ظهر\s*لظهر|باك\s*تو\s*باك/g, " #zzback ");
+  s = s.replace(/\b(?:4|four|quatre|cuatro|kat)\s*(?:points?|puntos?|pwen)\b|فور\s*بوينت|اربع\s*نقاط|اربع/g, " #zzquad ");
+  s = s.replace(/\b(?:3|three|trois|tres|twa)\s*(?:points?|puntos?|pwen)\b|ثري\s*بوينت|ثلاث\s*نقاط|ثلاث/g, " #zztri ");
+  NUM_WORDS.forEach(function(p){ s = s.replace(new RegExp("\\b" + p[0] + "\\b", "g"), p[1]); });
+  s = s.replace(/(\d)\s*(?:virgule|point|coma|punto|vigil|فاصله)\s*(\d)/g, "$1.$2").replace(/(\d),(\d)/g, "$1.$2");
+  s = s.replace(/(\d+(?:\.\d+)?)\s*(?:et demi|and a half|y medio|ak demi|edmi|ونصف)/g, function(_, n){ return String(parseFloat(n) + 0.5); });
+  s = s.replace(/(\d+)\s+(\d+)\s*\/\s*(\d+)/g, function(_, a, b, c){ return String(parseFloat(a) + parseFloat(b)/parseFloat(c)); });
+  s = s.replace(/(\d+)\s*\/\s*(\d+)/g, function(_, b, c){ return String(parseFloat(b)/parseFloat(c)); });
+  return s;
+}
+
+function numsIn(s){ return (s.match(/\d+(?:\.\d+)?/g) || []).map(parseFloat); }
+function labeledNum(s, kw){
+  var m = s.match(new RegExp("(?:" + kw + ")[^\\d#]{0,15}(\\d+(?:\\.\\d+)?)"));
+  return m ? parseFloat(m[1]) : null;
+}
+var VALID_ANGLES = [10,22.5,30,45,60];
+
+var UNIT_WORDS = [
+  ["mm", /millim\S*|\bmm\b|ملم|مم/],
+  ["cm", /centim\S*|\bcm\b|سنتيم\S*|سم/],
+  ["ft", /pieds?|\bfeet\b|\bfoot\b|\bft\b|\bpies?\b|\bpye\b|قدم|اقدام/],
+  ["m",  /\bmetres?\b|\bmeters?\b|\bmetros?\b|\bmet\b|متر/],
+  ["in", /pouces?|\binch(?:es)?\b|\bpulgadas?\b|\bpous\b|بوصه|انش/]
+];
+function convertVoiceUnits(s){
+  // "1 pied 4 pouces" -> "16 pouces"
+  s = s.replace(/(\d+(?:\.\d+)?)\s*(?:pieds?|feet|foot|ft|pies?|pye|قدم)\s*(?:et|and|y|ak|و)?\s*(\d+(?:\.\d+)?)\s*(?:pouces?|inch(?:es)?|pulgadas?|pous|بوصه|انش)/g,
+    function(_, f, i){ return String(parseFloat(f) * 12 + parseFloat(i)) + " pouces"; });
+  var found = [];
+  var re = /(\d+(?:\.\d+)?)\s*([^\d\s]+(?:\s[^\d\s]+)?)/g, m;
+  while((m = re.exec(s))){
+    for(var u = 0; u < UNIT_WORDS.length; u++){
+      var w = m[2].match(UNIT_WORDS[u][1]);
+      if(w && m[2].indexOf(w[0]) === 0){ found.push({idx:m.index, full:m[1] + " " + w[0], raw:m[0].slice(0, m[1].length) , num:parseFloat(m[1]), unit:UNIT_WORDS[u][0], wlen:w[0].length}); break; }
+    }
+  }
+  if(!found.length) return { text:s, unit:null };
+  var target = found[0].unit;
+  // remplace de la fin vers le début pour garder les positions
+  for(var k = found.length - 1; k >= 0; k--){
+    var f = found[k];
+    var val = f.num / UNIT_FACTOR[f.unit] * UNIT_FACTOR[target];
+    val = Math.round(val * 1000) / 1000;
+    var seg = s.slice(f.idx);
+    var mm = seg.match(/^(\d+(?:\.\d+)?)\s*/);
+    var end = f.idx + mm[0].length + f.wlen;
+    s = s.slice(0, f.idx) + val + " " + s.slice(end);
+  }
+  return { text:s, unit:target };
+}
+
+function parseVoice(raw){
+  var s = normVoice(raw);
+  var cmd = { bend:null, unit:null, values:{} };
+  if(/#zzback/.test(s)) cmd.bend = "b2b";
+  else if(/#zzquad/.test(s)) cmd.bend = "four";
+  else if(/#zztri/.test(s)) cmd.bend = "three";
+  else if(/\bkick|\bkik|كيك/.test(s)) cmd.bend = "kick";
+  else if(/off\s*set|\bofset|\bofse|desplazamiento|decalage|اوفست|اوفسيت/.test(s)) cmd.bend = "offset";
+  else if(/\b90\b/.test(s)) cmd.bend = "bend90";
+  if(!cmd.bend) return null;
+
+  var conv = convertVoiceUnits(s);
+  s = conv.text; cmd.unit = conv.unit;
+  var startVal = null;
+  var sm = s.match(/(\d+(?:\.\d+)?)\s*(?:du|depuis le|from the|from|desde el|del|depi|apati|من)\s*(?:bout|end|extremo|tiyo|الطرف)/);
+  if(sm){ startVal = parseFloat(sm[1]); s = s.replace(sm[0], " "); }
+  if(startVal !== null) cmd.values.in_start = startVal;
+
+  var angle = null;
+  var am = s.match(/(\d+(?:\.\d+)?)\s*(?:°|degres?|degrees?|grados?|degre|درجه|درجات)/);
+  if(am){
+    var a = parseFloat(am[1]);
+    if(a >= 22 && a < 23) a = 22.5;
+    if(VALID_ANGLES.indexOf(a) !== -1){ angle = a; s = s.replace(am[0], " "); }
+  }
+
+  if(cmd.bend === "offset" || cmd.bend === "kick"){
+    if(angle === null){
+      var ns0 = numsIn(s);
+      for(var i = ns0.length - 1; i >= 1; i--){ if(ns0[i] === 22) ns0[i] = 22.5; if(VALID_ANGLES.indexOf(ns0[i]) !== -1){ angle = ns0[i]; s = s.replace(new RegExp("\\b" + ns0[i] + "\\b"), " "); break; } }
+    }
+    var d = numsIn(s)[0];
+    if(!d) return null;
+    cmd.values.in_depth = d;
+    cmd.values.in_angle = angle || 30;
+  } else if(cmd.bend === "bend90"){
+    s = s.replace(/\b90\b/, " ");
+    var L = numsIn(s)[0];
+    if(!L) return null;
+    cmd.values.in_length = L;
+  } else if(cmd.bend === "b2b"){
+    var nb = numsIn(s);
+    if(nb.length > 2 && nb.indexOf(90) !== -1){ s = s.replace(/\b90\b/, " "); nb = numsIn(s); }
+    var st = labeledNum(s, "stub|hauteur|height|altura|wote|ارتفاع");
+    var di = labeledNum(s, "distance|distancia|distans|مسافه");
+    if(st === null) st = nb[0];
+    if(di === null) di = nb.filter(function(x){ return x !== st; })[0] || nb[1];
+    if(!st || !di) return null;
+    cmd.values.in_stub = st; cmd.values.in_b2b = di;
+  } else if(cmd.bend === "three"){
+    var h3 = labeledNum(s, "hauteur|height|altura|wote|ارتفاع") || numsIn(s)[0];
+    if(!h3) return null;
+    cmd.values.in_height = h3;
+  } else if(cmd.bend === "four"){
+    var n4 = numsIn(s);
+    var w = labeledNum(s, "largeur|large|width|wide|ancho|laje|عرض");
+    var h = labeledNum(s, "hauteur|haut|height|high|tall|altura|alto|wote|ارتفاع");
+    if(w === null && h === null){ w = n4[0]; h = n4[1]; }
+    else if(w === null){ w = n4.filter(function(x){ return x !== h; })[0]; }
+    else if(h === null){ h = n4.filter(function(x){ return x !== w; })[0]; }
+    if(!w || !h) return null;
+    cmd.values.in_width = w; cmd.values.in_height = h;
+  }
+  return cmd;
+}
+
+function handleVoice(alts){
+  var t = T(), cmd = null, heard = alts[0] || "";
+  for(var i = 0; i < alts.length && !cmd; i++){ cmd = parseVoice(alts[i]); if(cmd) heard = alts[i]; }
+  if(!cmd){
+    setVoiceStatus(t.voiceHeard + " « " + heard + " » — " + t.voiceNotUnderstood);
+    speak(t.voiceNotUnderstood);
+    return;
+  }
+  setVoiceStatus(t.voiceHeard + " « " + heard + " »");
+  applyVoiceCommand(cmd);
+}
+
+function applyVoiceCommand(cmd){
+  if(cmd.unit && cmd.unit !== state.unit){
+    state.unit = cmd.unit;
+    document.getElementById("unitSelect").value = cmd.unit;
+  }
+  state.bend = cmd.bend;
+  document.getElementById("bendSelect").value = cmd.bend;
+  renderInputs();
+  hideResults();
+  Object.keys(cmd.values).forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = cmd.values[id];
+  });
+  voiceSpeakNext = true;
+  onCalcClick();
+}
+
+function spokenText(str){
+  var t = T();
+  return String(str).replace(/<[^>]+>/g, " ").replace(/(\d)"/g, "$1 " + t.voiceInch).replace(/(\d)ft\b/g, "$1 " + t.g.feetWord).replace(/°/g, " " + t.voiceDeg).replace(/ − /g, " " + t.voiceMinus + " ").replace(/ = /g, " " + t.voiceEquals + " ").replace(/\s+/g, " ");
+}
+function speak(text){
+  if(!window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    var lang = VOICE_LANG[state.lang] || "fr-FR";
+    u.lang = lang;
+    var voices = speechSynthesis.getVoices();
+    var v = voices.filter(function(x){ return x.lang && x.lang.toLowerCase().indexOf(lang.slice(0,2)) === 0; })[0];
+    if(v) u.voice = v;
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speakResults(r){
+  var t = T();
+  var parts = [t.voiceIntro];
+  r.marks.forEach(function(m){ parts.push(m.label + " : " + m.val + "."); });
+  parts.push(t.voiceStepsIntro);
+  r.steps.forEach(function(st, i){ parts.push((i+1) + ". " + st); });
+  lastSpeech = spokenText(parts.join(" "));
+  renderVoice();
+  speak(lastSpeech);
+}
+
+async function onCalcClick(){
+  if(!currentSub) return;
+  var paid = hasPaidAccess();
+  if(!paid && trialsLeft <= 0){ voiceSpeakNext = false; showBlockedScreen("paywall"); return; }
+  calcShown = false;
+  calc();
+  voiceSpeakNext = false;
+  if(!calcShown || paid) return;
+  var r = await sb.rpc("bm_use_trial", { p_device: DEVICE_ID });
+  if(r.error){ hideResults(); showErr(T().auth.errGeneric); return; }
+  if(r.data === -2){ showBlockedScreen("banned"); return; }
+  if(r.data === -1){ trialsLeft = 0; hideResults(); showBlockedScreen("paywall"); return; }
+  if(r.data >= 100){ return; }
+  trialsLeft = r.data;
+  updateTrialBar();
+}
+document.getElementById("calcBtn").addEventListener("click", onCalcClick);
+document.getElementById("voiceBtn").addEventListener("click", toggleVoice);
+document.getElementById("voiceReplayBtn").addEventListener("click", function(){ if(lastSpeech) speak(lastSpeech); });
+if(window.speechSynthesis){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); }; }
+document.getElementById("creatorLink").addEventListener("click", function(e){
+  e.preventDefault();
+  openCodeModal();
+});
+document.getElementById("codeCancelBtn").addEventListener("click", closeCodeModal);
+document.getElementById("codeSubmitBtn").addEventListener("click", submitCode);
+document.getElementById("codeInput").addEventListener("keydown", function(e){
+  if(e.key === "Enter") submitCode();
+});
+document.getElementById("adminExitBtn").addEventListener("click", exitAdminPanel);
+document.getElementById("adminSavePriceBtn").addEventListener("click", function(){
+  var v = parseFloat(document.getElementById("adminPriceInput").value);
+  if(v && v>0){
+    adminState.price = v;
+    var m = document.getElementById("adminPriceSaved");
+    m.classList.add("show");
+    setTimeout(function(){ m.classList.remove("show"); }, 2500);
+  }
+});
+document.getElementById("accLogoutLink").addEventListener("click", doLogout);
+document.getElementById("accChangePwdLink").addEventListener("click", function(){
+  document.getElementById("appScreen").style.display = "none";
+  document.getElementById("authScreen").style.display = "block";
+  authView = "reset";
+  renderAuthScreen();
+});
+initAuth();
+</script>
+</body>
+</html>
