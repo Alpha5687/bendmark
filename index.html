@@ -1098,7 +1098,7 @@ async function doSignup(){
   if(isDisposable(email)){ showAuthErr(t.auth.errDisposable); return; }
   var avail = await sb.rpc("bm_email_available", { p_email: email });
   if(!avail.error && avail.data === false){ showAuthErr(t.auth.errEmailTaken); return; }
-  var res = await sb.auth.signUp({ email: email, password: password });
+  var res = await sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
   if(res.error){
     var m = (res.error.message || "").toLowerCase();
     showAuthErr(m.indexOf("already") !== -1 ? t.auth.errEmailTaken : (res.error.message || t.auth.errGeneric));
