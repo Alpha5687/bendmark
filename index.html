@@ -1179,8 +1179,25 @@ async function doLogout(){
   renderAuthScreen();
 }
 
+// Appel serveur fiable : rafraichit la session (telephone en veille = jeton expire), reessaie une fois, journalise l'erreur
+async function rpcSafe(name, args){
+  try{ await sb.auth.getSession(); }catch(e){}
+  var r = await sb.rpc(name, args);
+  if(r.error){
+    try{ await sb.auth.refreshSession(); }catch(e){}
+    r = await sb.rpc(name, args);
+  }
+  if(r.error){
+    try{ sb.rpc("bm_log_error", { p_where:name, p_msg:String(r.error.message || r.error.code || "error").slice(0,500), p_device:DEVICE_ID }); }catch(e){}
+  }
+  return r;
+}
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "visible"){ try{ sb.auth.getSession(); }catch(e){} }
+});
+
 async function fetchOrCreateSubscription(user){
-  var res = await sb.rpc("bm_status", { p_device: DEVICE_ID });
+  var res = await rpcSafe("bm_status", { p_device: DEVICE_ID });
   if(res.error){
     if((res.error.message || "").indexOf("email_taken") !== -1){ return { email_taken:true }; }
     return null;
@@ -2223,7 +2240,7 @@ async function onCalcClick(){
     lastCalcSnapshot = JSON.stringify(snap);
   }
   if(!calcShown || paid) return;
-  var r = await sb.rpc("bm_use_trial", { p_device: DEVICE_ID });
+  var r = await rpcSafe("bm_use_trial", { p_device: DEVICE_ID });
   if(r.error){ hideResults(); showErr(T().auth.errGeneric); return; }
   if(r.data === -2){ showBlockedScreen("banned"); return; }
   if(r.data === -1){ trialsLeft = 0; hideResults(); showBlockedScreen("paywall"); return; }
